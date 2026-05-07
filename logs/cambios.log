@@ -1,0 +1,4 @@
+2026-05-07 12:18:39 | INFO     | [AGREGAR] módulo=padron | dni=56798345 | nombre=Roman Riquelme
+2026-05-07 12:19:50 | INFO     | [ACTUALIZAR] módulo=padron | dni=56798345 | nombre=Roman Riquelme | campos=dni=56798345, nombres=Roman, apellidos=Riquelme, celular=2337898776, fecha_nacimiento=1979-12-12, localidad=América, domicilio=Calle falsa 123, email=rom@gmail.com, jubilado=True, pensionado=False, sexo=M, ocupacion=comerciante, nivel_estudios=Universitario
+2026-05-07 12:20:17 | INFO     | [ACTUALIZAR] módulo=padron | dni=56798345 | nombre=Roman Riquelme
+2026-05-07 12:21:01 | WARNING  | [ELIMINAR] módulo=padron | dni=56798345 | nombre=Roman Riquelme
