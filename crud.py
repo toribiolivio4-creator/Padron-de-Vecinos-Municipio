@@ -76,3 +76,27 @@ def upsert_padron(db: Session, padron_data: schemas.PadronCreate):
     db.commit()
     db.refresh(db_persona)
     return {"message": "Datos del padrón actualizados correctamente"}
+
+
+def get_all_personas(db: Session):
+    return db.query(models.Persona).filter(
+        models.Persona.activo == True
+    ).all()
+
+def update_persona(db: Session, dni: str, data):
+    persona = db.query(models.Persona).filter(models.Persona.dni == dni).first()
+    if not persona:
+        return None
+    for key, value in data.dict(exclude_unset=True).items():
+        setattr(persona, key, value)
+    db.commit()
+    db.refresh(persona)
+    return persona
+
+def soft_delete_persona(db: Session, dni: str):
+    persona = db.query(models.Persona).filter(models.Persona.dni == dni).first()
+    if not persona:
+        return False
+    persona.activo = False
+    db.commit()
+    return True

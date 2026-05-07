@@ -1,3 +1,166 @@
-<div id="panel-padron" class="panel">
-    <!-- TODO tu contenido de padrón -->
+<div id="panel-padron" class="panel active">
+
+    <!-- ===== VISTA PRINCIPAL: TABLA ===== -->
+    <div id="vista-tabla-padron">
+        <div class="section-header">
+            <div class="section-title-block">
+                <h2 class="section-title">Padrón de Vecinos</h2>
+                <p class="section-subtitle">Registro completo de personas del municipio</p>
+            </div>
+            <button class="btn btn-primary" onclick="mostrarFormularioPadron()">
+                ✏️ Modificar Datos
+            </button>
+        </div>
+
+        <div class="search-bar-wrapper">
+            <div class="search-input-group">
+                <span class="search-icon">🔍</span>
+                <input
+                    type="text"
+                    id="buscar-dni-padron"
+                    class="search-input"
+                    placeholder="Buscar por DNI..."
+                    oninput="filtrarPadron(this.value)"
+                    autocomplete="off"
+                />
+                <button class="search-clear" onclick="limpiarBusquedaPadron()" title="Limpiar búsqueda">✕</button>
+            </div>
+            <span class="search-count" id="padron-count"></span>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="data-table" id="tabla-padron">
+                <thead>
+                    <tr>
+                        <th>DNI</th>
+                        <th>Apellido</th>
+                        <th>Nombre</th>
+                        <th>Fecha Nac.</th>
+                        <th>Domicilio</th>
+                        <th>Localidad</th>
+                        <th>Teléfono</th>
+                        <th>Email</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="padron-tbody">
+                    <tr>
+                        <td colspan="9" class="table-loading">
+                            <span class="spinner"></span> Cargando datos...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===== VISTA FORMULARIO: AGREGAR / ACTUALIZAR / ELIMINAR ===== -->
+    <div id="vista-formulario-padron" style="display:none;">
+        <div class="section-header">
+            <div class="section-title-block">
+                <h2 class="section-title">Gestión de Personas</h2>
+                <p class="section-subtitle">Agregar, actualizar o eliminar un vecino del padrón</p>
+            </div>
+            <button class="btn btn-secondary" onclick="volverTablaPadron()">
+                ← Volver al Padrón
+            </button>
+        </div>
+
+        <div class="form-card">
+            <div class="form-group">
+                <label class="form-label" for="padron-dni">DNI *</label>
+                <input type="text" id="padron-dni" class="form-input" placeholder="Ej: 30123456"
+                    oninput="handleDniInputPadron(this.value)" maxlength="8" />
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="padron-apellido">Apellido *</label>
+                    <input type="text" id="padron-apellido" class="form-input" placeholder="Apellido" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="padron-nombre">Nombre *</label>
+                    <input type="text" id="padron-nombre" class="form-input" placeholder="Nombre" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="padron-fecha">Fecha de Nacimiento</label>
+                    <input type="date" id="padron-fecha" class="form-input" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="padron-telefono">Teléfono</label>
+                    <input type="text" id="padron-telefono" class="form-input" placeholder="Ej: 2337-123456" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="padron-domicilio">Domicilio</label>
+                <input type="text" id="padron-domicilio" class="form-input" placeholder="Calle y número" />
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="padron-localidad">Localidad</label>
+                    <input type="text" id="padron-localidad" class="form-input" placeholder="Localidad" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="padron-email">Email</label>
+                    <input type="email" id="padron-email" class="form-input" placeholder="correo@ejemplo.com" />
+                </div>
+            </div>
+            <div class="form-row">
+    <div class="form-group">
+        <label class="form-label" for="padron-sexo">Sexo</label>
+        <select id="padron-sexo" class="form-input">
+            <option value="">— Seleccionar —</option>
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+            <option value="X">No binario</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="padron-ocupacion">Ocupación</label>
+        <input type="text" id="padron-ocupacion" class="form-input" placeholder="Ej: Comerciante" />
+    </div>
+</div>
+
+<div class="form-row">
+    <div class="form-group">
+        <label class="form-label" for="padron-estudios">Nivel de estudios</label>
+        <select id="padron-estudios" class="form-input">
+            <option value="No especificado">No especificado</option>
+            <option value="Primario">Primario</option>
+            <option value="Secundario">Secundario</option>
+            <option value="Terciario">Terciario</option>
+            <option value="Universitario">Universitario</option>
+        </select>
+    </div>
+    <div class="form-group" style="display:flex; align-items:center; gap:1.5rem; padding-top:1.5rem;">
+        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;">
+            <input type="checkbox" id="padron-jubilado" /> Jubilado
+        </label>
+        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;">
+            <input type="checkbox" id="padron-pensionado" /> Pensionado
+        </label>
+    </div>
+</div>
+
+            <div class="form-actions">
+                <button class="btn btn-success" onclick="agregarPersona()">
+                    ➕ Agregar Persona
+                </button>
+                <button class="btn btn-primary" onclick="actualizarPersona()" id="btn-actualizar-padron" disabled>
+                    🔄 Actualizar Datos
+                </button>
+                <button class="btn btn-danger" onclick="eliminarPersona()" id="btn-eliminar-padron" disabled>
+                    🗑️ Eliminar Registro
+                </button>
+            </div>
+
+            <div id="padron-form-status" class="form-status"></div>
+        </div>
+    </div>
+
 </div>

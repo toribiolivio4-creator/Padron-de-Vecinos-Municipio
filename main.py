@@ -33,6 +33,12 @@ def get_db():
     finally:
         db.close()
 
+# ⚠️ IMPORTANTE: rutas específicas SIEMPRE antes que las que tienen parámetros
+
+@app.get("/personas", response_model=List[schemas.PersonaBase])
+def listar_personas(db: Session = Depends(get_db)):
+    return crud.get_all_personas(db)
+
 @app.get("/personas/search/{dni_prefix}", response_model=List[dict])
 def buscar_por_dni(dni_prefix: str, db: Session = Depends(get_db)):
     return crud.search_personas(db, dni_prefix)
@@ -44,10 +50,24 @@ def obtener_persona(dni: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Persona no encontrada")
     return persona
 
-@app.post("/inscripcion-feria/")
-def registrar_feria(data: schemas.FeriaCreate, db: Session = Depends(get_db)):
-    return crud.upsert_feria(db, data)
-
 @app.post("/padron-vecinos/")
 def registrar_padron(data: schemas.PadronCreate, db: Session = Depends(get_db)):
     return crud.upsert_padron(db, data)
+
+@app.put("/personas/{dni}", response_model=schemas.PersonaBase)
+def actualizar_persona(dni: str, data: schemas.PadronCreate, db: Session = Depends(get_db)):
+    persona = crud.update_persona(db, dni, data)
+    if not persona:
+        raise HTTPException(status_code=404, detail="Persona no encontrada")
+    return persona
+
+@app.patch("/personas/{dni}/baja")
+def baja_persona(dni: str, db: Session = Depends(get_db)):
+    ok = crud.soft_delete_persona(db, dni)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Persona no encontrada")
+    return {"mensaje": "Persona dada de baja correctamente"}
+
+@app.post("/inscripcion-feria/")
+def registrar_feria(data: schemas.FeriaCreate, db: Session = Depends(get_db)):
+    return crud.upsert_feria(db, data)
