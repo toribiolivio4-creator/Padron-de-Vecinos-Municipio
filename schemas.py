@@ -39,8 +39,8 @@ class FeriaCreate(PersonaBase):
 class PadronCreate(PersonaBase):
     jubilado: bool = False
     pensionado: bool = False
-    sexo: str
-    ocupacion: str
+    sexo: Optional[str] = None      # antes: str  (obligatorio)
+    ocupacion: Optional[str] = None # antes: str  (obligatorio)
     # Campos recomendados / opcionales
     nivel_estudios: Optional[str] = "No especificado"
 
