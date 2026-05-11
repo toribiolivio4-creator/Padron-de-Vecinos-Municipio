@@ -16,3 +16,7 @@
 2026-05-08 08:43:20 | WARNING  | [ELIMINAR] módulo=padron | dni=43567776 | nombre=Franco Andres Colapinto
 2026-05-08 08:46:34 | INFO     | [AGREGAR] módulo=padron | dni=41789666 | nombre=Warren Buffett
 2026-05-08 08:55:50 | WARNING  | [ELIMINAR] módulo=padron | dni=string | nombre=string string
+2026-05-08 11:13:21 | WARNING  | [ELIMINAR] módulo=padron | dni=41789666 | nombre=Warren Buffett
+2026-05-08 11:14:33 | INFO     | [AGREGAR] módulo=padron | dni=41788676 | nombre=Warren Buffett
+2026-05-08 11:18:56 | WARNING  | [ELIMINAR] módulo=padron | dni=43989190 | nombre=Stan Smith
+2026-05-08 11:20:47 | INFO     | [AGREGAR] módulo=padron | dni=40678976 | nombre=Smith Stan

@@ -316,15 +316,29 @@ async function actualizarPersona() {
 // =============================================
 // 🗑️ SOFT DELETE — ELIMINAR PERSONA
 // =============================================
+let _resolveModal = null;
+
+function abrirModal(dni) {
+    document.getElementById('modal-mensaje').textContent =
+        `¿Estás seguro que querés eliminar el registro de DNI ${dni}? Esta acción lo ocultará del padrón pero no borrará el registro de la base de datos.`;
+    const modal = document.getElementById('modal-confirmar');
+    modal.style.display = 'flex';
+    return new Promise(resolve => { _resolveModal = resolve; });
+}
+
+function cerrarModal(confirmado) {
+    document.getElementById('modal-confirmar').style.display = 'none';
+    if (_resolveModal) { _resolveModal(confirmado); _resolveModal = null; }
+}
+
 async function eliminarPersona() {
     const datos = getFormData();
     if (!datos.dni) { setFormStatus('⚠️ Ingresá un DNI.', 'error'); return; }
 
-    const confirmado = confirm(`¿Estás seguro que querés eliminar el registro de DNI ${datos.dni}?\nEsta acción lo ocultará del padrón pero no borrará el registro de la base de datos.`);
+    const confirmado = await abrirModal(datos.dni);
     if (!confirmado) return;
 
     try {
-        // Soft delete: PATCH con active=false (ajustá el endpoint a lo que use tu API)
         const res = await fetch(`${API_BASE}/personas/${datos.dni}/baja`, {
             method:  'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -343,7 +357,6 @@ async function eliminarPersona() {
     }
 }
 
-
 // =============================================
 // 🎉 TOAST NOTIFICATIONS
 // =============================================
@@ -356,7 +369,4 @@ function showToast(msg) {
 }
 
 
-// =============================================
-// 🎪 FERIA — lógica existente (sin modificar)
-// — Pegá aquí tu lógica original de feria —
-// =============================================
+
