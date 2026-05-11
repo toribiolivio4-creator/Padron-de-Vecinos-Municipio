@@ -68,9 +68,10 @@ This service manages the padrón de vecinos, person records, and feria registrat
 
 ## Run the application
 
-From the `backend` folder:
+From the project root (parent of `backend` folder):
 
 ```bash
+source backend/venv/bin/activate
 uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
