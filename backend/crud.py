@@ -1,7 +1,7 @@
 # crud.py
 from sqlalchemy.orm import Session
-import models, schemas
-from logger import log_agregar, log_actualizar, log_eliminar, log_error
+import backend.models as models, backend.schemas as schemas
+from backend.logger import log_agregar, log_actualizar, log_eliminar, log_error
 
 
 def search_personas(db: Session, dni_prefix: str):
