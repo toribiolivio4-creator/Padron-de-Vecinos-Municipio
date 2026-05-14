@@ -7,10 +7,8 @@ import backend.crud as crud
 import backend.schemas as schemas
 from backend.database import get_db
 
-router = APIRouter(
-    prefix="/personas",
-    tags=["personas"],
-)
+router = APIRouter(prefix="/personas", tags=["Personas"], redirect_slashes=False)
+
 
 
 @router.get(
@@ -23,7 +21,7 @@ def listar_personas(
     dni_prefix: Optional[str] = Query(
         None,
         description="Filtra personas cuyo DNI empiece con este valor (útil para autocompletado). Devuelve máximo 10 resultados.",
-        example="284",
+        examples=["284"],
     ),
     db: Session = Depends(get_db),
 ):
@@ -73,7 +71,7 @@ def actualizar_persona(dni: str, data: schemas.PadronCreate, db: Session = Depen
     status_code=200,
     summary="Dar de baja a una persona",
     responses={
-        200: {"description": "Persona dada de baja correctamente", "content": {"application/json": {"example": {"mensaje": "Persona dada de baja correctamente"}}}},
+        200: {"description": "Persona dada de baja correctamente", "content": {"application/json": {"examples": {"default": {"value": {"mensaje": "Persona dada de baja correctamente"}}}}}},
         404: {"description": "Persona no encontrada"},
     },
 )
@@ -88,3 +86,24 @@ def baja_persona(dni: str, db: Session = Depends(get_db)):
     if not ok:
         raise HTTPException(status_code=404, detail="Persona no encontrada")
     return {"mensaje": "Persona dada de baja correctamente"}
+
+
+@router.post(
+    "",
+    status_code=201,
+    summary="Agregar o actualizar persona",
+    responses={
+        201: {
+            "description": "Registro procesado correctamente",
+            "content": {"application/json": {"examples": {"default": {"value": {"message": "Resident registry record updated successfully."}}}}},
+        }
+    },
+)
+def registrar_persona(data: schemas.PadronCreate, db: Session = Depends(get_db)):
+    """
+    Crea o actualiza una persona (**upsert**).
+
+    - Si el **DNI** no existe, crea el registro.
+    - Si el **DNI** ya existe, actualiza los datos.
+    """
+    return crud.upsert_padron(db, data)

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import backend.models as models
 from backend.database import engine
-from backend.routes import personas_router, padron_router, ferias_router
+from backend.routes import personas_router, ferias_router
 
 # Crea las tablas en la base de datos si no existen
 models.Base.metadata.create_all(bind=engine)
@@ -20,13 +20,6 @@ tags_metadata = [
         "description": (
             "Operaciones sobre el registro de **personas**. "
             "Permite listar, consultar, actualizar y dar de baja ciudadanos."
-        ),
-    },
-    {
-        "name": "padrón",
-        "description": (
-            "Inscripción al **padrón de vecinos**. "
-            "Registra o actualiza datos adicionales del ciudadano como ocupación, estudios y beneficios."
         ),
     },
     {
@@ -102,5 +95,4 @@ def serve_frontend():
 # Routers
 # ─────────────────────────────────────────────
 app.include_router(personas_router)
-app.include_router(padron_router)
 app.include_router(ferias_router)

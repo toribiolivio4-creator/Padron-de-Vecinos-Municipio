@@ -81,10 +81,10 @@ def upsert_padron(db: Session, data: schemas.PadronCreate) -> dict:
         persona, is_new = _upsert_persona(db, data.model_dump())
         db.commit()
         db.refresh(persona)
-        _log_upsert("padron", is_new, data.dni, _full_name(data))
+        _log_upsert("personas", is_new, data.dni, _full_name(data))
         return {"message": "Resident registry record updated successfully."}
     except Exception as e:
-        log_error("padron", "upsert", data.dni, str(e))
+        log_error("personas", "upsert", data.dni, str(e))
         raise
 
 
@@ -99,10 +99,10 @@ def update_persona(db: Session, dni: str, data: schemas.PadronCreate) -> Optiona
         _apply_fields(persona, fields)
         db.commit()
         db.refresh(persona)
-        log_actualizar(modulo="padron", dni=dni, nombre=_full_name(persona), campos=fields)
+        log_actualizar(modulo="personas", dni=dni, nombre=_full_name(persona), campos=fields)
         return persona
     except Exception as e:
-        log_error("padron", "update", dni, str(e))
+        log_error("personas", "update", dni, str(e))
         raise
 
 
@@ -115,7 +115,7 @@ def soft_delete_persona(db: Session, dni: str) -> bool:
 
         persona.activo = False
         db.commit()
-        log_eliminar(modulo="padron", dni=dni, nombre=_full_name(persona))
+        log_eliminar(modulo="personas", dni=dni, nombre=_full_name(persona))
         return True
     except Exception as e:
         log_error("padron", "soft_delete", dni, str(e))

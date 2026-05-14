@@ -4,14 +4,17 @@ const API_BASE = 'http://127.0.0.1:8080';
 // 🔥 CARGADOR DE COMPONENTES
 // =============================================
 function loadComponent(id, file) {
+    const el = document.getElementById(id);
+    if (!el) return;
     fetch(file)
-        .then(res => res.text())
+        .then(res => { if (!res.ok) throw new Error(`404: ${file}`); return res.text(); })
         .then(data => {
-            document.getElementById(id).innerHTML = data;
+            el.innerHTML = data;
             if (id === 'padron') {
                 cargarPadronCompleto();
             }
-        });
+        })
+        .catch(err => console.warn('loadComponent error:', err));
 }
 
 // Cargar todo
@@ -165,7 +168,7 @@ function limpiarFormPadron() {
     if (btnAct) btnAct.disabled = true;
     if (btnDel) btnDel.disabled = true;
 
-    isUpdateMode.padron = false;
+    isUpdateMode.personas = false;
     setFormStatus('');
 }
 
@@ -173,7 +176,15 @@ function cargarDatosEnForm(p) {
     setValue('padron-dni',       p.dni);
     setValue('padron-apellido',  p.apellidos);   // ← apellidos
     setValue('padron-nombre',    p.nombres);     // ← nombres
-    setValue('padron-fecha',     p.fecha_nacimiento ? p.fecha_nacimiento.split('T')[0] : '');
+    (() => {
+        const f = p.fecha_nacimiento ? p.fecha_nacimiento.split('T')[0] : '';
+        if (f) {
+            const [y,m,d] = f.split('-');
+            setValue('padron-fecha', d+'/'+m+'/'+y);
+        } else {
+            setValue('padron-fecha', '');
+        }
+    })();
     setValue('padron-telefono',  p.celular);     // ← celular
     setValue('padron-domicilio', p.domicilio);
     setValue('padron-localidad', p.localidad);
@@ -186,7 +197,25 @@ function cargarDatosEnForm(p) {
     if (btnAct) btnAct.disabled = false;
     if (btnDel) btnDel.disabled = false;
 
-    isUpdateMode.padron = true;
+    isUpdateMode.personas = true;
+}
+
+
+function formatearFecha(input) {
+    let v = input.value.replace(/\D/g, '');
+    if (v.length >= 5) v = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4,8);
+    else if (v.length >= 3) v = v.slice(0,2) + '/' + v.slice(2);
+    input.value = v;
+}
+
+function parsearFecha(str) {
+    // Acepta DD/MM/AAAA → YYYY-MM-DD
+    if (!str) return null;
+    const parts = str.split('/');
+    if (parts.length === 3 && parts[2].length === 4) {
+        return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+    }
+    return null;
 }
 
 function setValue(id, val) {
@@ -199,7 +228,7 @@ function getFormData() {
         dni:              document.getElementById('padron-dni')?.value.trim(),
         apellidos:        document.getElementById('padron-apellido')?.value.trim(),
         nombres:          document.getElementById('padron-nombre')?.value.trim(),
-        fecha_nacimiento: document.getElementById('padron-fecha')?.value || null,
+        fecha_nacimiento: parsearFecha(document.getElementById('padron-fecha')?.value) || null,
         celular:          document.getElementById('padron-telefono')?.value.trim(),
         domicilio:        document.getElementById('padron-domicilio')?.value.trim(),
         localidad:        document.getElementById('padron-localidad')?.value.trim(),
@@ -263,12 +292,12 @@ function handleDniInputPadron(valor) {
 // =============================================
 async function agregarPersona() {
     const datos = getFormData();
-    if (!datos.dni || !datos.apellidos || !datos.nombres) {
-        setFormStatus('⚠️ DNI, apellido y nombre son obligatorios.', 'error');
+    if (!datos.dni || !datos.apellidos || !datos.nombres || !datos.fecha_nacimiento) {
+        setFormStatus('⚠️ DNI, apellido, nombre y fecha de nacimiento son obligatorios.', 'error');
         return;
     }
     try {
-        const res = await fetch(`${API_BASE}/padron-vecinos/`, {
+        const res = await fetch(`${API_BASE}/personas`, {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify(datos),
@@ -367,6 +396,3 @@ function showToast(msg) {
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 3000);
 }
-
-
-

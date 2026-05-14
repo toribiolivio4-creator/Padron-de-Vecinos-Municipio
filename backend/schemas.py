@@ -11,9 +11,9 @@ class PersonaBase(BaseModel):
     dni: str = Field(..., description="DNI del ciudadano (clave primaria)", example="28456789")
     nombres: str = Field(..., description="Nombres del ciudadano", example="Juan Carlos")
     apellidos: str = Field(..., description="Apellidos del ciudadano", example="Gómez")
-    celular: str = Field(..., description="Número de celular con código de área", example="2994123456")
-    fecha_nacimiento: date = Field(..., description="Fecha de nacimiento (YYYY-MM-DD)", example="1985-06-15")
-    localidad: str = Field(..., description="Localidad de residencia", example="Neuquén Capital")
+    celular: Optional[str] = Field(None, description="Número de celular con código de área", example="2994123456")
+    fecha_nacimiento: Optional[date] = Field(None, description="Fecha de nacimiento (YYYY-MM-DD)", example="1985-06-15")
+    localidad: Optional[str] = Field(None, description="Localidad de residencia", example="Neuquén Capital")
     domicilio: Optional[str] = Field(None, description="Dirección completa", example="Av. Argentina 1234")
     email: Optional[EmailStr] = Field(None, description="Correo electrónico", example="juan@email.com")
 
@@ -64,9 +64,9 @@ class PadronCreate(PersonaBase):
 # ESQUEMA PARA BÚSQUEDA (Search Combobox)
 # ---------------------------------------------------------
 class PersonaSearchResponse(BaseModel):
-    dni: str = Field(..., example="28456789")
-    nombres: str = Field(..., example="Juan Carlos")
-    apellidos: str = Field(..., example="Gómez")
+    dni: str = Field(..., examples="28456789")
+    nombres: str = Field(..., examples="Juan Carlos")
+    apellidos: str = Field(..., examples="Gómez")
 
     class Config:
         from_attributes = True
