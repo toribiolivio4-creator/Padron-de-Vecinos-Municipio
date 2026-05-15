@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import backend.models as models
 from backend.database import engine
 from backend.routes import personas_router, ferias_router
+from backend.routes.google_forms import router as google_forms_router
+
 
 # Crea las tablas en la base de datos si no existen
 models.Base.metadata.create_all(bind=engine)
@@ -96,3 +98,4 @@ def serve_frontend():
 # ─────────────────────────────────────────────
 app.include_router(personas_router)
 app.include_router(ferias_router)
+app.include_router(google_forms_router)
