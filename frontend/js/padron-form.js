@@ -1,141 +1,3 @@
-const API_BASE = 'http://127.0.0.1:8080';
-
-// =============================================
-// 🔥 CARGADOR DE COMPONENTES
-// =============================================
-function loadComponent(id, file) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    fetch(file)
-        .then(res => { if (!res.ok) throw new Error(`404: ${file}`); return res.text(); })
-        .then(data => {
-            el.innerHTML = data;
-            if (id === 'padron') {
-                cargarPadronCompleto();
-            }
-        })
-        .catch(err => console.warn('loadComponent error:', err));
-}
-
-// Cargar todo
-loadComponent("header",  "/frontend/components/hearder.html");
-loadComponent("tabs",    "/frontend/components/tabs.html");
-loadComponent("feria",   "/frontend/components/feria.html");
-loadComponent("padron",  "/frontend/components/padron.html");
-loadComponent("footer",  "/frontend/components/footer.html");
-
-
-// =============================================
-// 🗂️ ESTADO GLOBAL
-// =============================================
-let debounceTimers = {};
-let isUpdateMode   = { feria: false, padron: false };
-let padronData     = [];         // todos los registros activos cacheados
-let padronDebounce = null;
-
-
-// =============================================
-// 📋 TABS
-// =============================================
-function switchTab(tab) {
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
-    const panel = document.getElementById(`panel-${tab}`);
-    if (panel) panel.classList.add('active');
-
-    const btns = document.querySelectorAll('.tab-btn');
-    btns.forEach(b => {
-        if (b.textContent.toLowerCase().includes(tab === 'feria' ? 'feria' : 'padrón')) {
-            b.classList.add('active');
-        }
-    });
-}
-
-
-// =============================================
-// 📊 PADRÓN — CARGA DE TABLA COMPLETA
-// =============================================
-async function cargarPadronCompleto() {
-    try {
-        const res  = await fetch(`${API_BASE}/personas`);
-        const data = await res.json();
-        // Solo activos (soft delete: active === true o deleted_at === null)
-        padronData = data.filter(p => p.active !== false && !p.deleted_at);
-        renderTabla(padronData);
-    } catch (err) {
-        console.error('Error cargando padrón:', err);
-        const tbody = document.getElementById('padron-tbody');
-        if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="table-empty">⚠️ No se pudo conectar con el servidor.</td></tr>`;
-    }
-}
-
-function renderTabla(filas) {
-    const tbody = document.getElementById('padron-tbody');
-    const count = document.getElementById('padron-count');
-    if (!tbody) return;
-
-    if (count) count.textContent = `${filas.length} registro${filas.length !== 1 ? 's' : ''}`;
-
-    if (filas.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="table-empty">No se encontraron resultados.</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = filas.map(p => `
-        <tr>
-            <td><span class="dni-badge">${p.dni ?? '—'}</span></td>
-            <td>${p.apellidos ?? '—'}</td>
-            <td>${p.nombres ?? '—'}</td>
-            <td>${formatFecha(p.fecha_nacimiento)}</td>
-            <td>${p.domicilio ?? '—'}</td>
-            <td>${p.localidad ?? '—'}</td>
-            <td>${p.celular ?? '—'}</td>
-            <td>${p.email ?? '—'}</td>
-            <td>
-                <button class="btn-row-edit" title="Editar" onclick="editarDesdeTabla(${JSON.stringify(p).replace(/"/g, '&quot;')})">
-                    ✏️
-                </button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-function formatFecha(f) {
-    if (!f) return '—';
-    try {
-        return new Date(f).toLocaleDateString('es-AR');
-    } catch { return f; }
-}
-
-
-// =============================================
-// 🔍 BUSCADOR EN TIEMPO REAL (por DNI)
-// =============================================
-function filtrarPadron(valor) {
-    clearTimeout(padronDebounce);
-    padronDebounce = setTimeout(() => {
-        const q = valor.trim();
-        if (!q) {
-            renderTabla(padronData);
-            return;
-        }
-        const filtrado = padronData.filter(p =>
-            String(p.dni ?? '').includes(q)
-        );
-        renderTabla(filtrado);
-    }, 200);
-}
-
-function limpiarBusquedaPadron() {
-    const input = document.getElementById('buscar-dni-padron');
-    if (input) { input.value = ''; filtrarPadron(''); }
-}
-
-
-// =============================================
-// 🔀 NAVEGACIÓN ENTRE VISTA-TABLA Y VISTA-FORM
-// =============================================
 function mostrarFormularioPadron() {
     document.getElementById('vista-tabla-padron').style.display  = 'none';
     document.getElementById('vista-formulario-padron').style.display = '';
@@ -145,19 +7,14 @@ function mostrarFormularioPadron() {
 function volverTablaPadron() {
     document.getElementById('vista-formulario-padron').style.display = 'none';
     document.getElementById('vista-tabla-padron').style.display  = '';
-    cargarPadronCompleto();   // refresca la tabla al volver
+    cargarPadronCompleto();
 }
 
-// Editar desde la fila de la tabla: va al form con datos precargados
 function editarDesdeTabla(persona) {
     mostrarFormularioPadron();
     cargarDatosEnForm(persona);
 }
 
-
-// =============================================
-// 📝 FORMULARIO DE PADRÓN — helpers
-// =============================================
 function limpiarFormPadron() {
     ['padron-dni','padron-apellido','padron-nombre','padron-fecha',
     'padron-telefono','padron-domicilio','padron-localidad','padron-email']
@@ -174,8 +31,8 @@ function limpiarFormPadron() {
 
 function cargarDatosEnForm(p) {
     setValue('padron-dni',       p.dni);
-    setValue('padron-apellido',  p.apellidos);   // ← apellidos
-    setValue('padron-nombre',    p.nombres);     // ← nombres
+    setValue('padron-apellido',  p.apellidos);
+    setValue('padron-nombre',    p.nombres);
     (() => {
         const f = p.fecha_nacimiento ? p.fecha_nacimiento.split('T')[0] : '';
         if (f) {
@@ -185,12 +42,10 @@ function cargarDatosEnForm(p) {
             setValue('padron-fecha', '');
         }
     })();
-    setValue('padron-telefono',  p.celular);     // ← celular
+    setValue('padron-telefono',  p.celular);
     setValue('padron-domicilio', p.domicilio);
     setValue('padron-localidad', p.localidad);
     setValue('padron-email',     p.email);
-
-
 
     const btnAct = document.getElementById('btn-actualizar-padron');
     const btnDel = document.getElementById('btn-eliminar-padron');
@@ -200,7 +55,6 @@ function cargarDatosEnForm(p) {
     isUpdateMode.personas = true;
 }
 
-
 function formatearFecha(input) {
     let v = input.value.replace(/\D/g, '');
     if (v.length >= 5) v = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4,8);
@@ -209,7 +63,6 @@ function formatearFecha(input) {
 }
 
 function parsearFecha(str) {
-    // Acepta DD/MM/AAAA → YYYY-MM-DD
     if (!str) return null;
     const parts = str.split('/');
     if (parts.length === 3 && parts[2].length === 4) {
@@ -248,15 +101,10 @@ function setFormStatus(msg, tipo = '') {
     el.className    = `form-status ${tipo}`;
 }
 
-
-// =============================================
-// 🔎 BUSCAR POR DNI AL TIPEAR EN EL FORMULARIO
-// =============================================
 function handleDniInputPadron(valor) {
     const dni = valor.trim();
     clearTimeout(debounceTimers.padron);
 
-    // Reset botones si se borra el DNI
     if (!dni) {
         document.getElementById('btn-actualizar-padron').disabled = true;
         document.getElementById('btn-eliminar-padron').disabled   = true;
@@ -274,7 +122,6 @@ function handleDniInputPadron(valor) {
                 cargarDatosEnForm(p);
                 setFormStatus('✅ Persona encontrada. Podés actualizar o eliminar.', 'success');
             } else {
-                // DNI no existe → modo agregar
                 document.getElementById('btn-actualizar-padron').disabled = true;
                 document.getElementById('btn-eliminar-padron').disabled   = true;
                 isUpdateMode.padron = false;
@@ -286,10 +133,6 @@ function handleDniInputPadron(valor) {
     }, 400);
 }
 
-
-// =============================================
-// ➕ AGREGAR PERSONA
-// =============================================
 async function agregarPersona() {
     const datos = getFormData();
     if (!datos.dni || !datos.apellidos || !datos.nombres || !datos.fecha_nacimiento) {
@@ -315,10 +158,6 @@ async function agregarPersona() {
     }
 }
 
-
-// =============================================
-// 🔄 ACTUALIZAR PERSONA
-// =============================================
 async function actualizarPersona() {
     const datos = getFormData();
     if (!datos.dni) { setFormStatus('⚠️ Ingresá un DNI.', 'error'); return; }
@@ -341,10 +180,6 @@ async function actualizarPersona() {
     }
 }
 
-
-// =============================================
-// 🗑️ SOFT DELETE — ELIMINAR PERSONA
-// =============================================
 let _resolveModal = null;
 
 function abrirModal(dni) {
@@ -384,15 +219,4 @@ async function eliminarPersona() {
     } catch (e) {
         setFormStatus('⚠️ No se pudo conectar con el servidor.', 'error');
     }
-}
-
-// =============================================
-// 🎉 TOAST NOTIFICATIONS
-// =============================================
-function showToast(msg) {
-    const toast = document.getElementById('toast');
-    if (!toast) return;
-    toast.textContent = msg;
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3000);
 }

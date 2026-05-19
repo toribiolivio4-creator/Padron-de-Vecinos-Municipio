@@ -3,15 +3,28 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 
-import backend.models as models
-from backend.database import engine
+import backend.models
+from backend.models import Persona, InscripcionFeria, LogEvento
+from backend.database import engine, Base
 from backend.routes import personas_router, ferias_router
 from backend.routes.google_forms import router as google_forms_router
 
 
-# Crea las tablas en la base de datos si no existen
-models.Base.metadata.create_all(bind=engine)
+# ─────────────────────────────────────────────
+# Lifespan: crea tablas al iniciar (si la DB está disponible)
+# ─────────────────────────────────────────────
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        Base.metadata.create_all(bind=engine)
+        print("✅ Tablas verificadas/creadas correctamente.")
+    except Exception as e:
+        print(f"⚠️ No se pudo conectar a la base de datos al iniciar: {e}")
+        print("   Los endpoints de DB fallarán hasta que PostgreSQL esté disponible.")
+    yield
+
 
 # ─────────────────────────────────────────────
 # Metadata de tags (se muestra en Swagger UI)
@@ -54,6 +67,7 @@ API para la gestión del **observatorio estadístico municipal**.
 - Los endpoints de inscripción realizan **upsert**: crean el registro si no existe, o lo actualizan si ya existe.
 """,
     version="1.0.0",
+    lifespan=lifespan,
     openapi_tags=tags_metadata,
     contact={
         "name": "Observatorio Estadístico Municipal",
@@ -63,13 +77,12 @@ API para la gestión del **observatorio estadístico municipal**.
         "name": "Uso interno",
     },
     swagger_ui_parameters={
-        "filter": True,                      # Barra de búsqueda para endpoints
-        "deepLinking": True,                 # Links directos a un endpoint
-        "displayRequestDuration": True,      # Muestra cuánto tarda cada consulta
-        "defaultModelsExpandDepth": 2,       # Expande los schemas de modelos por defecto
-        "docExpansion": "list",              # "list" = endpoints visibles pero cerrados
-                                             # "full" = todo abierto | "none" = todo cerrado
-        "syntaxHighlight.theme": "monokai", # Tema de colores para el JSON
+        "filter": True,
+        "deepLinking": True,
+        "displayRequestDuration": True,
+        "defaultModelsExpandDepth": 2,
+        "docExpansion": "list",
+        "syntaxHighlight.theme": "monokai",
     },
 )
 

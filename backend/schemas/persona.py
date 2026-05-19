@@ -1,12 +1,8 @@
-# schemas.py
 from pydantic import BaseModel, EmailStr, Field
 from datetime import date
 from typing import Optional
 
 
-# ---------------------------------------------------------
-# ESQUEMA BASE: Campos que comparten ambos formularios
-# ---------------------------------------------------------
 class PersonaBase(BaseModel):
     dni: str = Field(..., description="DNI del ciudadano (clave primaria)", example="28456789")
     nombres: str = Field(..., description="Nombres del ciudadano", example="Juan Carlos")
@@ -21,30 +17,15 @@ class PersonaBase(BaseModel):
         from_attributes = True
 
 
-# ---------------------------------------------------------
-# FORMULARIO 1: Inscripción a Ferias
-# ---------------------------------------------------------
-class FeriaCreate(PersonaBase):
-    instagram_facebook: str = Field(
-        ...,
-        alias="pagina_redes",
-        description="Usuario o URL de redes sociales (Instagram o Facebook)",
-        example="@juan_artesanias",
-    )
-    rubro: str = Field(..., description="Rubro o categoría del puesto en la feria", example="Artesanías en cuero")
-    descripcion: str = Field(
-        ...,
-        description="Descripción de los productos o servicios que ofrece",
-        example="Venta de cintos, billeteras y accesorios de cuero artesanal.",
-    )
+class PersonaSearchResponse(BaseModel):
+    dni: str = Field(..., examples=["28456789"])
+    nombres: str = Field(..., examples=["Juan Carlos"])
+    apellidos: str = Field(..., examples=["Gómez"])
 
     class Config:
-        populate_by_name = True
+        from_attributes = True
 
 
-# ---------------------------------------------------------
-# FORMULARIO 2: Padrón de Vecinos
-# ---------------------------------------------------------
 class PadronCreate(PersonaBase):
     jubilado: bool = Field(False, description="Indica si el ciudadano es jubilado")
     pensionado: bool = Field(False, description="Indica si el ciudadano percibe una pensión")
@@ -55,18 +36,6 @@ class PadronCreate(PersonaBase):
         description="Nivel educativo alcanzado",
         example="Universitario completo",
     )
-
-    class Config:
-        from_attributes = True
-
-
-# ---------------------------------------------------------
-# ESQUEMA PARA BÚSQUEDA (Search Combobox)
-# ---------------------------------------------------------
-class PersonaSearchResponse(BaseModel):
-    dni: str = Field(..., examples="28456789")
-    nombres: str = Field(..., examples="Juan Carlos")
-    apellidos: str = Field(..., examples="Gómez")
 
     class Config:
         from_attributes = True

@@ -5,7 +5,9 @@ from sqlalchemy.orm import sessionmaker
 
 # Configuración de la URL de PostgreSQL
 # Formato: postgresql://usuario:contraseña@host:puerto/nombre_base_de_datos
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:dacia@127.0.0.1:8000/postgres"
+# host: 172.23.160.1 es la IP de Windows accesible desde WSL
+# port: 8000 (configurado en postgresql.conf)
+SQLALCHEMY_DATABASE_URL = "postgresql://postgres:dacia@172.23.160.1:5432/postgres"
 
 # El motor de la base de datos
 # PostgreSQL no requiere 'check_same_thread' como SQLite
