@@ -1,4 +1,4 @@
 let debounceTimers = {};
-let isUpdateMode   = { feria: false, padron: false };
+let isUpdateMode   = { padron: false };
 let padronData     = [];
 let padronDebounce = null;

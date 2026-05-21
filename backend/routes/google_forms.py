@@ -65,24 +65,6 @@ class GoogleFormsPadron(BaseModel):
     nivel_estudios: Opt[str] = None
 
 
-class GoogleFormsFeria(BaseModel):
-    """
-    Mapeo del formulario de Ferias.
-    Ajustá los nombres de campo según las preguntas de tu Form.
-    """
-    dni: str
-    nombres: str
-    apellidos: str
-    celular: Opt[str] = None
-    fecha_nacimiento: Opt[date] = None
-    localidad: Opt[str] = None
-    domicilio: Opt[str] = None
-    email: Opt[str] = None
-    pagina_redes: str = ""             # alias → instagram_facebook
-    rubro: str = ""
-    descripcion: str = ""
-
-
 # ──────────────────────────────────────────────────────────
 # Endpoints
 # ──────────────────────────────────────────────────────────
@@ -104,22 +86,3 @@ def webhook_padron(
 ):
     padron_data = schemas.PadronCreate(**data.model_dump())
     return crud.upsert_padron(db, padron_data)
-
-
-@router.post(
-    "/google-forms/feria",
-    status_code=201,
-    summary="Webhook: Google Forms → Inscripción Feria",
-    description=(
-        "Recibe la respuesta de un formulario de Google Forms "
-        "y la inserta/actualiza en la base de datos. "
-        "Llamar desde Apps Script con `onFormSubmit`."
-    ),
-)
-def webhook_feria(
-    data: GoogleFormsFeria,
-    db: Session = Depends(get_db),
-    _: None = Depends(_verificar_token),
-):
-    feria_data = schemas.FeriaCreate(**data.model_dump())
-    return crud.upsert_feria(db, feria_data)

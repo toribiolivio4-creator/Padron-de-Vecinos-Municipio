@@ -1,0 +1,219 @@
+<div id="panel-admin" class="panel">
+
+    <!-- ===== LISTA DE FORMULARIOS ===== -->
+    <div id="vista-lista-admin">
+        <div class="section-header">
+            <div class="section-title-block">
+                <h2 class="section-title">🛠️ Administrador de Formularios</h2>
+                <p class="section-subtitle">Crear, editar y gestionar formularios dinámicos con migraciones automáticas</p>
+            </div>
+            <button class="btn btn-primary" onclick="mostrarCrearFormulario()">
+                ➕ Nuevo Formulario
+            </button>
+        </div>
+
+        <div class="search-bar-wrapper">
+            <div class="search-input-group">
+                <input
+                    type="text"
+                    id="buscar-form-admin"
+                    class="search-input"
+                    placeholder="Buscar formulario..."
+                    oninput="filtrarFormsAdmin(this.value)"
+                    autocomplete="off"
+                />
+                <button class="search-clear" onclick="limpiarBusquedaForms()" title="Limpiar búsqueda">✕</button>
+            </div>
+            <span class="search-count" id="admin-forms-count"></span>
+        </div>
+
+        <div class="forms-grid" id="admin-forms-grid">
+            <div class="table-loading-wrapper">
+                <span class="spinner"></span> Cargando formularios...
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== EDITOR DE FORMULARIO ===== -->
+    <div id="vista-editor-admin" style="display:none;">
+        <div class="section-header">
+            <div class="section-title-block">
+                <h2 class="section-title" id="editor-title">Crear Formulario</h2>
+                <p class="section-subtitle" id="editor-subtitle">Configurá las secciones y campos del formulario</p>
+            </div>
+            <div class="editor-header-actions">
+                <button class="btn btn-secondary" onclick="volverListaAdmin()">
+                    ← Volver
+                </button>
+                <button class="btn btn-primary" onclick="guardarFormulario()" id="btn-guardar-form">
+                    💾 Guardar
+                </button>
+            </div>
+        </div>
+
+        <div class="admin-editor-layout">
+            <!-- Panel izquierdo: Configuración -->
+            <div class="admin-config-panel">
+                <div class="admin-config-section">
+                    <h3>📋 Información General</h3>
+                    <div class="form-group">
+                        <label class="form-label">Nombre (ID único)</label>
+                        <input type="text" id="admin-form-name" class="form-input" placeholder="ej: personas" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Título</label>
+                        <input type="text" id="admin-form-title" class="form-input" placeholder="ej: Gestión de Personas" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descripción</label>
+                        <textarea id="admin-form-description" class="form-input" rows="2" placeholder="Descripción del formulario"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Prefijo API</label>
+                            <input type="text" id="admin-form-prefix" class="form-input" placeholder="ej: /personas" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nombre del Modelo</label>
+                            <input type="text" id="admin-form-model" class="form-input" placeholder="ej: Persona" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Tabla (opcional)</label>
+                            <input type="text" id="admin-form-table" class="form-input" placeholder="Se genera automáticamente" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Clave Primaria</label>
+                            <input type="text" id="admin-form-pk" class="form-input" value="id" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-config-section">
+                    <h3>🗂️ Secciones y Campos</h3>
+                    <div id="admin-sections-container"></div>
+                    <button class="btn btn-secondary btn-sm" onclick="agregarSeccion()">
+                        ➕ Agregar Sección
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel derecho: Preview -->
+            <div class="admin-preview-panel">
+                <div class="preview-header">
+                    <h3>👁️ Vista Previa</h3>
+                    <div class="preview-actions">
+                        <button class="btn btn-sm btn-outline" onclick="aplicarMigracion()" id="btn-migrate" title="Aplicar migraciones de BD">
+                            🗄️ Migrar BD
+                        </button>
+                        <button class="btn btn-sm btn-outline" onclick="verEstadoMigracion()" id="btn-migration-status" title="Ver estado de migración">
+                            📊 Estado
+                        </button>
+                        <button class="btn btn-sm btn-success" onclick="generarCodigo()" id="btn-generate" title="Generar código automáticamente">
+                            ⚡ Generar Código
+                        </button>
+                    </div>
+                </div>
+                <div id="admin-preview-content" class="preview-content">
+                    <p class="preview-placeholder">Configurá campos para ver la vista previa</p>
+                </div>
+                <div id="admin-migration-status" class="migration-status-panel" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ===== MODAL: AGREGAR CAMPO ===== -->
+<div id="modal-campo" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.45); align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:14px; border-top:4px solid var(--azul); box-shadow:0 8px 40px rgba(0,0,0,0.18); padding:28px; max-width:520px; width:90%; max-height:85vh; overflow-y:auto; font-family:var(--font);">
+        <h3 style="font-family:var(--font-head); font-size:16px; font-weight:700; margin-bottom:20px;">➕ Agregar Campo</h3>
+
+        <div class="form-group">
+            <label class="form-label">Nombre (ID)</label>
+            <input type="text" id="campo-name" class="form-input" placeholder="ej: email" />
+        </div>
+        <div class="form-group">
+            <label class="form-label">Etiqueta</label>
+            <input type="text" id="campo-label" class="form-input" placeholder="ej: Correo electrónico" />
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Tipo</label>
+                <select id="campo-type" class="form-input" onchange="toggleCampoOptions()">
+                    <option value="string">Texto</option>
+                    <option value="email">Email</option>
+                    <option value="date">Fecha</option>
+                    <option value="boolean">Checkbox</option>
+                    <option value="integer">Número entero</option>
+                    <option value="number">Número decimal</option>
+                    <option value="text">Texto largo</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Widget</label>
+                <select id="campo-widget" class="form-input" onchange="toggleCampoOptions()">
+                    <option value="">Input normal</option>
+                    <option value="select">Select</option>
+                    <option value="checkbox">Checkbox</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Placeholder</label>
+                <input type="text" id="campo-placeholder" class="form-input" placeholder="Texto de ayuda" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Max Length</label>
+                <input type="number" id="campo-maxlength" class="form-input" placeholder="Opcional" />
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Valor por defecto</label>
+            <input type="text" id="campo-default" class="form-input" placeholder="Opcional" />
+        </div>
+
+        <div class="form-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="campo-required" />
+                <span class="checkbox-text">Obligatorio</span>
+            </label>
+        </div>
+
+        <div id="campo-select-options" style="display:none;">
+            <div class="form-group">
+                <label class="form-label">Opciones del Select (una por línea: valor|etiqueta)</label>
+                <textarea id="campo-select-opts" class="form-input" rows="4" placeholder="M|Masculino&#10;F|Femenino&#10;X|No binario"></textarea>
+            </div>
+        </div>
+
+        <div id="campo-validation-options">
+            <div class="form-group">
+                <label class="form-label">Patrón de validación (regex)</label>
+                <input type="text" id="campo-validation-pattern" class="form-input" placeholder="ej: ^\d{7,8}$" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Mensaje de error</label>
+                <input type="text" id="campo-validation-msg" class="form-input" placeholder="Mensaje si no pasa la validación" />
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+            <button onclick="cerrarModalCampo(false)" class="btn btn-secondary">Cancelar</button>
+            <button onclick="cerrarModalCampo(true)" class="btn btn-primary">Agregar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL: RESULTADO DE GENERACIÓN ===== -->
+<div id="modal-generacion" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.45); align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:14px; border-top:4px solid var(--verde); box-shadow:0 8px 40px rgba(0,0,0,0.18); padding:28px; max-width:520px; width:90%; font-family:var(--font);">
+        <h3 style="font-family:var(--font-head); font-size:16px; font-weight:700; margin-bottom:16px;">⚡ Código Generado</h3>
+        <div id="generacion-result" style="font-size:14px; line-height:1.6;"></div>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+            <button onclick="document.getElementById('modal-generacion').style.display='none'" class="btn btn-primary">Cerrar</button>
+        </div>
+    </div>
+</div>

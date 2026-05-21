@@ -9,10 +9,11 @@ from starlette.responses import Response
 from contextlib import asynccontextmanager
 
 import backend.models
-from backend.models import Persona, InscripcionFeria, LogEvento
+from backend.models import Persona, LogEvento, FormDefinition, FormFieldMigration
 from backend.database import engine, Base
-from backend.routes import personas_router, ferias_router
+from backend.routes import personas_router
 from backend.routes.google_forms import router as google_forms_router
+from backend.routes.form_admin import router as form_admin_router
 
 
 # ─────────────────────────────────────────────
@@ -41,11 +42,15 @@ tags_metadata = [
         ),
     },
     {
-        "name": "ferias",
+        "name": "admin-forms",
         "description": (
-            "Inscripción a **ferias comunitarias**. "
-            "Registra o actualiza la participación de un ciudadano como feriante, incluyendo rubro y redes sociales."
+            "Panel de administración de **formularios dinámicos**. "
+            "Permite crear, editar y gestionar formularios schema-driven con migraciones automáticas de BD."
         ),
+    },
+    {
+        "name": "webhooks",
+        "description": "Endpoints para recibir datos de servicios externos (Google Forms).",
     },
 ]
 
@@ -53,7 +58,7 @@ tags_metadata = [
 # Configuración de FastAPI y Swagger UI
 # ─────────────────────────────────────────────
 app = FastAPI(
-    title="Sistema de Gestión de Padrón y Ferias",
+    title="Sistema de Gestión de Padrón Municipal",
     description="""
 API para la gestión del **observatorio estadístico municipal**.
 
@@ -61,7 +66,6 @@ API para la gestión del **observatorio estadístico municipal**.
 
 - 👤 **Personas**: Consulta, actualización y baja de ciudadanos registrados.
 - 📋 **Padrón de Vecinos**: Inscripción con datos socioeconómicos (ocupación, estudios, jubilación).
-- 🛍️ **Ferias Comunitarias**: Inscripción de feriantes con rubro y redes sociales.
 
 ## Notas
 
@@ -127,5 +131,5 @@ def serve_frontend():
 # Routers
 # ─────────────────────────────────────────────
 app.include_router(personas_router)
-app.include_router(ferias_router)
 app.include_router(google_forms_router)
+app.include_router(form_admin_router)

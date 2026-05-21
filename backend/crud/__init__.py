@@ -5,7 +5,18 @@ from backend.crud.personas import (
     update_persona,
     soft_delete_persona,
 )
-from backend.crud.ferias import upsert_feria
+from backend.crud.form_definitions import (
+    get_forms,
+    get_form,
+    get_form_full,
+    create_form,
+    update_form,
+    delete_form,
+    check_migration,
+    apply_migration,
+    sync_all,
+    get_table_columns,
+)
 
 __all__ = [
     "get_personas",
@@ -13,5 +24,14 @@ __all__ = [
     "upsert_padron",
     "update_persona",
     "soft_delete_persona",
-    "upsert_feria",
+    "get_forms",
+    "get_form",
+    "get_form_full",
+    "create_form",
+    "update_form",
+    "delete_form",
+    "check_migration",
+    "apply_migration",
+    "sync_all",
+    "get_table_columns",
 ]

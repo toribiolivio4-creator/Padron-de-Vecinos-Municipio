@@ -11,12 +11,15 @@ function loadComponent(id, file) {
                 renderFormulario();
                 cargarPadronCompleto();
             }
+            if (id === 'admin') {
+                // El admin se carga al hacer click en el tab
+            }
         })
         .catch(err => console.warn('loadComponent error:', err));
 }
 
 loadComponent("header",  "/frontend/components/hearder.html");
 loadComponent("tabs",    "/frontend/components/tabs.html");
-loadComponent("feria",   "/frontend/components/feria.html");
 loadComponent("padron",  "/frontend/components/padron.html");
+loadComponent("admin",   "/frontend/components/admin.html");
 loadComponent("footer",  "/frontend/components/footer.html");
