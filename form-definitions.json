@@ -1,0 +1,293 @@
+{
+    "forms": [
+        {
+            "name": "personas",
+            "title": "Gestión de Personas",
+            "description": "Registro y administración de ciudadanos del padrón municipal",
+            "prefix": "/personas",
+            "tags": ["Personas"],
+            "primary_key": "dni",
+            "model_name": "Persona",
+            "sections": [
+                {
+                    "id": "datos-personales",
+                    "title": "Datos Personales",
+                    "icon": "👤",
+                    "fields": [
+                        {
+                            "name": "dni",
+                            "label": "DNI",
+                            "type": "string",
+                            "required": true,
+                            "primary_key": true,
+                            "max_length": 8,
+                            "placeholder": "Ej: 30123456",
+                            "frontend": {
+                                "mask": "numeric",
+                                "autocomplete": true,
+                                "autocomplete_endpoint": "/personas",
+                                "autocomplete_param": "dni_prefix",
+                                "validation": {
+                                    "pattern": "^\\d{7,8}$",
+                                    "message": "El DNI debe tener 7 u 8 dígitos numéricos"
+                                }
+                            }
+                        },
+                        {
+                            "name": "nombres",
+                            "label": "Nombre/s",
+                            "type": "string",
+                            "required": true,
+                            "placeholder": "Nombre/s",
+                            "frontend": {
+                                "validation": {
+                                    "min_length": 2,
+                                    "message": "El nombre debe tener al menos 2 caracteres"
+                                }
+                            }
+                        },
+                        {
+                            "name": "apellidos",
+                            "label": "Apellido/s",
+                            "type": "string",
+                            "required": true,
+                            "placeholder": "Apellido/s",
+                            "frontend": {
+                                "validation": {
+                                    "min_length": 2,
+                                    "message": "El apellido debe tener al menos 2 caracteres"
+                                }
+                            }
+                        },
+                        {
+                            "name": "fecha_nacimiento",
+                            "label": "Fecha de Nacimiento",
+                            "type": "date",
+                            "required": true,
+                            "placeholder": "DD/MM/AAAA",
+                            "frontend": {
+                                "mask": "date",
+                                "validation": {
+                                    "custom": "validateFechaNacimiento"
+                                }
+                            }
+                        },
+                        {
+                            "name": "sexo",
+                            "label": "Sexo",
+                            "type": "string",
+                            "required": false,
+                            "frontend": {
+                                "widget": "select",
+                                "options": [
+                                    {"value": "", "label": "— Seleccionar —"},
+                                    {"value": "M", "label": "Masculino"},
+                                    {"value": "F", "label": "Femenino"},
+                                    {"value": "X", "label": "No binario"}
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "contacto",
+                    "title": "Contacto",
+                    "icon": "📞",
+                    "fields": [
+                        {
+                            "name": "celular",
+                            "label": "Teléfono",
+                            "type": "string",
+                            "required": false,
+                            "placeholder": "Ej: 2337-123456",
+                            "frontend": {
+                                "mask": "phone",
+                                "validation": {
+                                    "pattern": "^[\\d\\-]{0,15}$",
+                                    "message": "Formato inválido. Ej: 2337-123456"
+                                }
+                            }
+                        },
+                        {
+                            "name": "email",
+                            "label": "Email",
+                            "type": "email",
+                            "required": false,
+                            "placeholder": "correo@ejemplo.com",
+                            "frontend": {
+                                "validation": {
+                                    "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+                                    "message": "Ingresá un email válido"
+                                }
+                            }
+                        },
+                        {
+                            "name": "domicilio",
+                            "label": "Domicilio",
+                            "type": "string",
+                            "required": false,
+                            "placeholder": "Calle y número"
+                        },
+                        {
+                            "name": "localidad",
+                            "label": "Localidad",
+                            "type": "string",
+                            "required": false,
+                            "placeholder": "Ej: Rivadavia",
+                            "frontend": {
+                                "autocomplete": true,
+                                "autocomplete_source": "localidades"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "socioeconomico",
+                    "title": "Datos Socioeconómicos",
+                    "icon": "📊",
+                    "fields": [
+                        {
+                            "name": "ocupacion",
+                            "label": "Ocupación",
+                            "type": "string",
+                            "required": false,
+                            "placeholder": "Ej: Comerciante",
+                            "frontend": {
+                                "autocomplete": true,
+                                "autocomplete_source": "ocupaciones"
+                            }
+                        },
+                        {
+                            "name": "nivel_estudios",
+                            "label": "Nivel de estudios",
+                            "type": "string",
+                            "required": false,
+                            "default": "No especificado",
+                            "frontend": {
+                                "widget": "select",
+                                "options": [
+                                    {"value": "No especificado", "label": "No especificado"},
+                                    {"value": "Primario", "label": "Primario"},
+                                    {"value": "Secundario", "label": "Secundario"},
+                                    {"value": "Terciario", "label": "Terciario"},
+                                    {"value": "Universitario", "label": "Universitario"}
+                                ]
+                            }
+                        },
+                        {
+                            "name": "jubilado",
+                            "label": "Jubilado",
+                            "type": "boolean",
+                            "required": false,
+                            "default": false,
+                            "frontend": {
+                                "widget": "checkbox",
+                                "conditional": {
+                                    "show_fields": ["obra_social", "fecha_jubilacion"]
+                                }
+                            }
+                        },
+                        {
+                            "name": "pensionado",
+                            "label": "Pensionado",
+                            "type": "boolean",
+                            "required": false,
+                            "default": false,
+                            "frontend": {
+                                "widget": "checkbox",
+                                "conditional": {
+                                    "show_fields": ["tipo_pension"]
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "condicionales",
+                    "title": "Información Adicional",
+                    "icon": "📋",
+                    "collapsed": true,
+                    "fields": [
+                        {
+                            "name": "obra_social",
+                            "label": "Obra Social",
+                            "type": "string",
+                            "required": false,
+                            "placeholder": "Nombre de la obra social",
+                            "frontend": {
+                                "visible": false,
+                                "depends_on": "jubilado"
+                            }
+                        },
+                        {
+                            "name": "fecha_jubilacion",
+                            "label": "Fecha de Jubilación",
+                            "type": "date",
+                            "required": false,
+                            "placeholder": "DD/MM/AAAA",
+                            "frontend": {
+                                "visible": false,
+                                "depends_on": "jubilado",
+                                "mask": "date"
+                            }
+                        },
+                        {
+                            "name": "tipo_pension",
+                            "label": "Tipo de Pensión",
+                            "type": "string",
+                            "required": false,
+                            "frontend": {
+                                "visible": false,
+                                "depends_on": "pensionado",
+                                "widget": "select",
+                                "options": [
+                                    {"value": "", "label": "— Seleccionar —"},
+                                    {"value": "Nacional", "label": "Nacional"},
+                                    {"value": "Provincial", "label": "Provincial"},
+                                    {"value": "Municipal", "label": "Municipal"},
+                                    {"value": "Otra", "label": "Otra"}
+                                ]
+                            }
+                        },
+                        {
+                            "name": "grupo_sanguineo",
+                            "label": "Grupo Sanguíneo",
+                            "type": "string",
+                            "required": false,
+                            "frontend": {
+                                "widget": "select",
+                                "options": [
+                                    {"value": "", "label": "— Seleccionar —"},
+                                    {"value": "A+", "label": "A+"},
+                                    {"value": "A-", "label": "A-"},
+                                    {"value": "B+", "label": "B+"},
+                                    {"value": "B-", "label": "B-"},
+                                    {"value": "AB+", "label": "AB+"},
+                                    {"value": "AB-", "label": "AB-"},
+                                    {"value": "O+", "label": "O+"},
+                                    {"value": "O-", "label": "O-"}
+                                ]
+                            }
+                        },
+                        {
+                            "name": "tipo_vivienda",
+                            "label": "Tipo de Vivienda",
+                            "type": "string",
+                            "required": false,
+                            "frontend": {
+                                "widget": "select",
+                                "options": [
+                                    {"value": "", "label": "— Seleccionar —"},
+                                    {"value": "Propia", "label": "Propia"},
+                                    {"value": "Alquilada", "label": "Alquilada"},
+                                    {"value": "Prestada", "label": "Prestada"},
+                                    {"value": "Precaria", "label": "Precaria"}
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

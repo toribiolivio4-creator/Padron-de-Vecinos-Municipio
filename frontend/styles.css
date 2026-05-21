@@ -779,3 +779,177 @@
     z-index: 9999;
 }
 .toast.show { opacity: 1; transform: translateY(0); }
+
+/* =============================================
+   FORMULARIO DINÁMICO — Secciones, validación, autocompletado
+   ============================================= */
+
+.form-section {
+    margin-bottom: 1.25rem;
+    border: 1px solid #e2ece0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.form-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1.25rem;
+    background: linear-gradient(135deg, #f0f7f0, #fff);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+}
+
+.form-section-header:hover {
+    background: linear-gradient(135deg, #e4f0e4, #f8faf8);
+}
+
+.form-section-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2d6a2d;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.form-section-icon {
+    font-size: 1.1rem;
+}
+
+.form-section-toggle {
+    font-size: 0.75rem;
+    color: #6b7280;
+    transition: transform 0.2s;
+}
+
+.form-section-body {
+    padding: 1.25rem;
+    transition: all 0.2s;
+}
+
+.section-collapsed .form-section-body {
+    display: none;
+}
+
+.form-row-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-row-group .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 560px) {
+    .form-row-group .form-row { grid-template-columns: 1fr; }
+}
+
+.field-hidden {
+    display: none !important;
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+.input-error {
+    border-color: #dc2626 !important;
+    background: #fef2f2 !important;
+}
+
+.input-error:focus {
+    box-shadow: 0 0 0 3px rgba(220,38,38,0.12) !important;
+}
+
+.field-error {
+    font-size: 0.75rem;
+    color: #dc2626;
+    min-height: 0.9rem;
+    margin-top: 0.15rem;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.autocomplete-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 100;
+    display: none;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.autocomplete-item {
+    padding: 0.6rem 0.85rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #374151;
+    transition: background 0.1s;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.autocomplete-item:hover {
+    background: #f0f7f0;
+}
+
+.autocomplete-item + .autocomplete-item {
+    border-top: 1px solid #f0f4ef;
+}
+
+.autocomplete-item mark {
+    background: #fef3dc;
+    color: #a05c00;
+    font-weight: 600;
+    padding: 0 1px;
+    border-radius: 2px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.6rem 0.85rem;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    transition: background 0.12s, border-color 0.12s;
+    user-select: none;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+.checkbox-label:hover {
+    background: #f0f7f0;
+    border-color: #3a7d3a;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #3a7d3a;
+}
+
+.checkbox-text {
+    font-weight: 500;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.85rem;
+}
+
+.form-checkbox-group {
+    margin-bottom: 0.5rem;
+}

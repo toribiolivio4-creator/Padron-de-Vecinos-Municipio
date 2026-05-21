@@ -36,6 +36,11 @@ class PadronCreate(PersonaBase):
         description="Nivel educativo alcanzado",
         example="Universitario completo",
     )
+    obra_social: Optional[str] = Field(None, description="Obra social")
+    fecha_jubilacion: Optional[date] = Field(None, description="Fecha de jubilación")
+    tipo_pension: Optional[str] = Field(None, description="Tipo de pensión")
+    grupo_sanguineo: Optional[str] = Field(None, description="Grupo sanguíneo")
+    tipo_vivienda: Optional[str] = Field(None, description="Tipo de vivienda")
 
     class Config:
         from_attributes = True

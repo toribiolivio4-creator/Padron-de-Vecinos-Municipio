@@ -66,88 +66,10 @@
         </div>
 
         <div class="form-card">
-            <div class="form-group">
-                <label class="form-label" for="padron-dni">DNI *</label>
-                <input type="text" id="padron-dni" class="form-input" placeholder="Ej: 30123456"
-                    oninput="handleDniInputPadron(this.value)" maxlength="8" />
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label" for="padron-apellido">Apellido *</label>
-                    <input type="text" id="padron-apellido" class="form-input" placeholder="Apellido/s" />
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="padron-nombre">Nombre *</label>
-                    <input type="text" id="padron-nombre" class="form-input" placeholder="Nombre/s" />
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label" for="padron-fecha">Fecha de Nacimiento *</label>
-                    <input type="text" id="padron-fecha" class="form-input" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatearFecha(this)" />
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="padron-telefono">Teléfono</label>
-                    <input type="text" id="padron-telefono" class="form-input" placeholder="Ej: 2337-123456" />
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" for="padron-domicilio">Domicilio</label>
-                <input type="text" id="padron-domicilio" class="form-input" placeholder="Calle y número" />
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label" for="padron-localidad">Localidad</label>
-                    <input type="text" id="padron-localidad" class="form-input" placeholder="America" />
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="padron-email">Email</label>
-                    <input type="email" id="padron-email" class="form-input" placeholder="correo@ejemplo.com" />
-                </div>
-            </div>
-            <div class="form-row">
-    <div class="form-group">
-        <label class="form-label" for="padron-sexo">Sexo</label>
-        <select id="padron-sexo" class="form-input">
-            <option value="">— Seleccionar —</option>
-            <option value="M">Masculino</option>
-            <option value="F">Femenino</option>
-            <option value="X">No binario</option>
-        </select>
-    </div>
-    <div class="form-group">
-        <label class="form-label" for="padron-ocupacion">Ocupación</label>
-        <input type="text" id="padron-ocupacion" class="form-input" placeholder="Ej: Comerciante" />
-    </div>
-</div>
-
-<div class="form-row">
-    <div class="form-group">
-        <label class="form-label" for="padron-estudios">Nivel de estudios</label>
-        <select id="padron-estudios" class="form-input">
-            <option value="No especificado">No especificado</option>
-            <option value="Primario">Primario</option>
-            <option value="Secundario">Secundario</option>
-            <option value="Terciario">Terciario</option>
-            <option value="Universitario">Universitario</option>
-        </select>
-    </div>
-    <div class="form-group" style="display:flex; align-items:center; gap:1.5rem; padding-top:1.5rem;">
-        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;">
-            <input type="checkbox" id="padron-jubilado" /> Jubilado
-        </label>
-        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;">
-            <input type="checkbox" id="padron-pensionado" /> Pensionado
-        </label>
-    </div>
-</div>
+            <div id="form-dinamico"></div>
 
             <div class="form-actions">
-                <button class="btn btn-success" onclick="agregarPersona()" >
+                <button class="btn btn-success" onclick="agregarPersona()" id="btn-agregar-padron">
                     ➕ Agregar Persona
                 </button>
                 <button class="btn btn-primary" onclick="actualizarPersona()" id="btn-actualizar-padron" disabled>

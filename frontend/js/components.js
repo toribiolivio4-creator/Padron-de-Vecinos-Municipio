@@ -8,6 +8,7 @@ function loadComponent(id, file) {
         .then(data => {
             el.innerHTML = data;
             if (id === 'padron') {
+                renderFormulario();
                 cargarPadronCompleto();
             }
         })
