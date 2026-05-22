@@ -1,0 +1,49 @@
+<div id="panel-public-forms" class="panel">
+
+    <div id="public-forms-list">
+        <div class="section-header">
+            <div class="section-title-block">
+                <h2 class="section-title">📋 Formularios Públicos</h2>
+                <p class="section-subtitle">Seleccioná un formulario para completarlo</p>
+            </div>
+        </div>
+
+        <div class="forms-grid" id="public-forms-grid">
+            <div class="table-loading-wrapper">
+                <span class="spinner"></span> Cargando formularios...
+            </div>
+        </div>
+    </div>
+
+    <div id="public-form-view" style="display:none;">
+        <div class="section-header">
+            <div class="section-title-block">
+                <h2 class="section-title" id="public-form-title"></h2>
+                <p class="section-subtitle" id="public-form-desc"></p>
+            </div>
+            <button class="btn btn-secondary" onclick="volverListaPublica()">
+                ← Volver
+            </button>
+        </div>
+
+        <div class="form-card">
+            <div id="public-form-dinamico"></div>
+            <div class="form-actions">
+                <button class="btn btn-success" onclick="enviarFormularioPublico()">
+                    📤 Enviar
+                </button>
+            </div>
+            <div id="public-form-status" class="form-status"></div>
+        </div>
+    </div>
+
+</div>
+
+<div id="modal-public-success" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.45); align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:14px; border-top:4px solid var(--verde); box-shadow:0 8px 40px rgba(0,0,0,0.18); padding:32px 28px; max-width:420px; width:90%; text-align:center;">
+        <div style="font-size:48px; margin-bottom:12px;">✅</div>
+        <h3 style="font-size:18px; margin-bottom:8px;">Formulario enviado</h3>
+        <p style="color:#666; margin-bottom:20px;">Gracias por completar el formulario.</p>
+        <button onclick="volverListaPublica()" class="btn btn-primary">Volver</button>
+    </div>
+</div>

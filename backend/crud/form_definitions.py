@@ -3,12 +3,16 @@ CRUD para gestión de definiciones de formularios.
 """
 
 import json
+import os
+from pathlib import Path
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
 from backend.models import FormDefinition
 from backend.schemas import FormDefinitionCreate, FormDefinitionUpdate
+
+DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 from backend.crud.form_migrations import (
     check_form_migration_status,
     apply_form_migrations,
@@ -119,7 +123,16 @@ def create_form(db: Session, data: FormDefinitionCreate) -> FormDefinition:
     db.commit()
     db.refresh(form_def)
 
+    _init_data_file(data.name)
+
     return form_def
+
+
+def _init_data_file(name: str):
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    json_path = DATA_DIR / f"{name}.json"
+    if not json_path.exists():
+        json_path.write_text("[]", encoding="utf-8")
 
 
 def update_form(db: Session, name: str, data: FormDefinitionUpdate) -> FormDefinition:

@@ -1,5 +1,7 @@
 # main.py
-from fastapi import FastAPI
+import importlib
+from pathlib import Path
+from fastapi import FastAPI, APIRouter
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,6 +16,7 @@ from backend.database import engine, Base
 from backend.routes import personas_router
 from backend.routes.google_forms import router as google_forms_router
 from backend.routes.form_admin import router as form_admin_router
+from backend.routes.public_forms import router as public_forms_router
 
 
 # ─────────────────────────────────────────────
@@ -133,3 +136,18 @@ def serve_frontend():
 app.include_router(personas_router)
 app.include_router(google_forms_router)
 app.include_router(form_admin_router)
+app.include_router(public_forms_router)
+
+# ─────────────────────────────────────────────
+# Auto-descubrimiento de routers generados
+# ─────────────────────────────────────────────
+_routes_dir = Path(__file__).resolve().parent / "routes"
+for _f in sorted(_routes_dir.glob("auto_*.py")):
+    _module_name = f"backend.routes.{_f.stem}"
+    try:
+        _mod = importlib.import_module(_module_name)
+        if hasattr(_mod, "router") and isinstance(_mod.router, APIRouter):
+            app.include_router(_mod.router)
+            print(f"  ✅ Router auto-cargado: {_module_name}")
+    except Exception as _e:
+        print(f"  ⚠️ No se pudo cargar {_module_name}: {_e}")

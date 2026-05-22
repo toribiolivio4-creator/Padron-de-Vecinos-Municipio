@@ -444,11 +444,8 @@ def main():
         print(f"  ⏭️ {crud_utils_path} (ya existe, se omite para no romper compatibilidad)")
 
     print("\n✨ Generación completada.")
-    print("   Para usar las rutas generadas, agregá en main.py:")
-    for form_def in definitions["forms"]:
-        name = form_def["name"]
-        print(f'     from backend.routes.auto_{name} import router as auto_{name}_router')
-        print(f"     app.include_router(auto_{name}_router)")
+    print("   ✅ Las rutas se cargan automáticamente desde main.py (auto-descubrimiento).")
+    print("   Reiniciá el servidor para que los cambios tengan efecto.")
 
 
 if __name__ == "__main__":

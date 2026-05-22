@@ -14,7 +14,7 @@ from typing import Dict, List
 from backend.models import FormDefinition
 from backend.crud.form_migrations import apply_form_migrations, get_table_name
 
-ROOT = Path(__file__).resolve().parent.parent.parent
+ROOT = Path(__file__).resolve().parent.parent
 
 TYPE_MAP_PYTHON = {
     "string": "str",

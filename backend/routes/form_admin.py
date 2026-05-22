@@ -150,7 +150,7 @@ def generar_codigo(name: str, db: Session = Depends(get_db)):
         from backend.generate_from_db import generate_from_form_definition
         result = generate_from_form_definition(form_def)
         return {
-            "message": "Código generado correctamente",
+            "message": "Código generado correctamente. Las rutas se cargan automáticamente al reiniciar el servidor.",
             "form_name": name,
             "files_generated": result.get("files", []),
             "migration_result": result.get("migration"),

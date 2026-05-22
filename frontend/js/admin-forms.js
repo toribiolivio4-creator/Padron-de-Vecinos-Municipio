@@ -594,7 +594,7 @@ async function generarCodigo() {
         const modal = document.getElementById('modal-generacion');
         const resultDiv = document.getElementById('generacion-result');
 
-        let html = `<p><strong>Formulario:</strong> ${result.form_name}</p>`;
+        let html = `<p>${result.message}</p>`;
         html += `<p><strong>Archivos generados:</strong></p><ul>`;
         (result.files_generated || []).forEach(f => {
             html += `<li><code>${f}</code></li>`;
@@ -605,10 +605,6 @@ async function generarCodigo() {
             const mr = result.migration_result;
             html += `<p><strong>Migración:</strong> ${mr.columns_added?.length || 0} columna${mr.columns_added?.length !== 1 ? 's' : ''} agregada${mr.columns_added?.length !== 1 ? 's' : ''}</p>`;
         }
-
-        html += `<p style="margin-top:12px; color:#666; font-size:13px;">⚠️ Para activar las rutas, agregá en <code>main.py</code>:</p>`;
-        html += `<pre style="background:#f5f5f5; padding:10px; border-radius:6px; font-size:12px;">from backend.routes.auto_${adminEditingForm.name} import router as auto_${adminEditingForm.name}_router
-app.include_router(auto_${adminEditingForm.name}_router)</pre>`;
 
         resultDiv.innerHTML = html;
         modal.style.display = 'flex';
