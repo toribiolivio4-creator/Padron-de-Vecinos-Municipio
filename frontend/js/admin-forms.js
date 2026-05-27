@@ -291,7 +291,6 @@ function renderSectionBlock(section, sIdx) {
 function renderQuestionCard(sIdx, fIdx, field) {
   const isEditing = editingField && editingField.sectionIdx === sIdx && editingField.fieldIdx === fIdx;
   const typeLabel = getTypeLabel(field.type, field.frontend?.widget);
-  const nameId = field.name || `campo_${sIdx}_${fIdx}`;
 
   return `
     <div class="gf-question-card ${isEditing ? 'gf-editing' : ''}" data-section="${sIdx}" data-field="${fIdx}">
@@ -320,31 +319,19 @@ function renderQuestionCard(sIdx, fIdx, field) {
           </div>
         </div>
         <div class="gf-q-edit-row">
-          <div class="gf-q-edit-field">
+          <div class="gf-q-edit-field gf-q-edit-field-full">
             <label>Tipo</label>
             <select class="gf-q-select" onchange="onFieldTypeChange(${sIdx}, ${fIdx}, this.value)">
               ${renderTypeOptions(field.type, field.frontend?.widget)}
             </select>
           </div>
-          <div class="gf-q-edit-field">
-            <label>Nombre interno</label>
-            <input type="text" class="gf-q-input" value="${escapeHtml(nameId)}"
-              placeholder="ID del campo"
-              onchange="onFieldNameChange(${sIdx}, ${fIdx}, this.value)" />
-          </div>
         </div>
         <div class="gf-q-edit-row">
-          <div class="gf-q-edit-field">
-            <label>Texto de ayuda</label>
+          <div class="gf-q-edit-field gf-q-edit-field-full">
+            <label>Placeholder</label>
             <input type="text" class="gf-q-input" value="${escapeHtml(field.placeholder || '')}"
               placeholder="Texto de ayuda dentro del campo"
               onchange="onFieldPlaceholderChange(${sIdx}, ${fIdx}, this.value)" />
-          </div>
-          <div class="gf-q-edit-field">
-            <label>Valor por defecto</label>
-            <input type="text" class="gf-q-input" value="${escapeHtml(field.default || '')}"
-              placeholder="Opcional"
-              onchange="onFieldDefaultChange(${sIdx}, ${fIdx}, this.value)" />
           </div>
         </div>
 
@@ -607,9 +594,9 @@ function cerrarSelectorTipo() {
 
 function crearPreguntaConTipo(type) {
   cerrarSelectorTipo();
-  const sectionIdx = window._pendingSectionIdx !== undefined ? window._pendingSectionIdx : (adminSections.length > 0 ? adminSections.length - 1 : 0);
+  const sectionIdx = window._pendingSectionIdx !== undefined ? window._pendingSectionIdx : -1;
   window._pendingSectionIdx = undefined;
-  createFieldInSection(sectionIdx >= 0 ? sectionIdx : 0, type);
+  createFieldInSection(sectionIdx, type);
 }
 
 function agregarPreguntaASeccion(sectionIdx) {
@@ -619,7 +606,7 @@ function agregarPreguntaASeccion(sectionIdx) {
 function createFieldInSection(sectionIdx, type) {
   if (!adminSections[sectionIdx]) {
     const id = `section-${Date.now()}`;
-    adminSections.push({ id, title: 'Sección ' + (adminSections.length + 1), icon: '📋', collapsed: false, fields: [] });
+    adminSections.push({ id, title: 'Pregunta ' + (adminSections.length + 1), icon: '📋', collapsed: false, fields: [] });
     sectionIdx = adminSections.length - 1;
   }
 
