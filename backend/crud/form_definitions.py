@@ -3,16 +3,12 @@ CRUD para gestión de definiciones de formularios.
 """
 
 import json
-import os
-from pathlib import Path
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
 from backend.models import FormDefinition
 from backend.schemas import FormDefinitionCreate, FormDefinitionUpdate
-
-DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 from backend.crud.form_migrations import (
     check_form_migration_status,
     apply_form_migrations,
@@ -101,9 +97,22 @@ def get_form_full(db: Session, name: str) -> Optional[dict]:
 
 def create_form(db: Session, data: FormDefinitionCreate) -> FormDefinition:
     """Crea un nuevo formulario y aplica migraciones."""
-    existing = get_form(db, data.name)
+    existing = db.query(FormDefinition).filter(FormDefinition.name == data.name).first()
     if existing:
-        raise HTTPException(status_code=400, detail=f"Ya existe un formulario con nombre '{data.name}'")
+        if existing.activo:
+            raise HTTPException(status_code=400, detail=f"Ya existe un formulario con nombre '{data.name}'")
+        existing.activo = True
+        existing.title = data.title
+        existing.description = data.description
+        existing.prefix = data.prefix
+        existing.tags = json.dumps(data.tags) if data.tags else None
+        existing.primary_key = data.primary_key
+        existing.model_name = data.model_name
+        existing.table_name = data.table_name
+        existing.definition = build_definition_json(data)
+        db.commit()
+        db.refresh(existing)
+        return existing
 
     definition_json = build_definition_json(data)
 
@@ -123,16 +132,7 @@ def create_form(db: Session, data: FormDefinitionCreate) -> FormDefinition:
     db.commit()
     db.refresh(form_def)
 
-    _init_data_file(data.name)
-
     return form_def
-
-
-def _init_data_file(name: str):
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    json_path = DATA_DIR / f"{name}.json"
-    if not json_path.exists():
-        json_path.write_text("[]", encoding="utf-8")
 
 
 def update_form(db: Session, name: str, data: FormDefinitionUpdate) -> FormDefinition:

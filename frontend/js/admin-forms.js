@@ -512,7 +512,6 @@ function onFieldTypeChange(sIdx, fIdx, newType) {
   if (!adminSections[sIdx]?.fields[fIdx]) return;
   const field = adminSections[sIdx].fields[fIdx];
 
-  // Map user-facing types to internal types
   if (newType === 'select') {
     field.type = 'string';
     field.frontend = field.frontend || {};
@@ -532,10 +531,16 @@ function onFieldTypeChange(sIdx, fIdx, newType) {
         { value: 'opcion_2', label: 'Opción 2' },
       ];
     }
+  } else if (newType === 'date') {
+    field.type = 'date';
+    field.frontend = field.frontend || {};
+    field.frontend.mask = 'date';
+    delete field.options;
   } else {
     field.type = newType;
     if (field.frontend) {
       delete field.frontend.widget;
+      delete field.frontend.mask;
       if (Object.keys(field.frontend).length === 0) delete field.frontend;
     }
     delete field.options;
@@ -609,6 +614,46 @@ function createFieldInSection(sectionIdx, type) {
     adminSections.push({ id, title: 'Pregunta ' + (adminSections.length + 1), icon: '📋', collapsed: false, fields: [] });
     sectionIdx = adminSections.length - 1;
   }
+
+  const fieldNum = adminSections[sectionIdx].fields.length + 1;
+  const name = `campo_${sectionIdx}_${fieldNum}`;
+
+  let field = { name, label: '', type: 'string', required: false };
+
+  if (type === 'select') {
+    field.type = 'string';
+    field.frontend = {
+      widget: 'select',
+      options: [
+        { value: 'opcion_1', label: 'Opción 1' },
+        { value: 'opcion_2', label: 'Opción 2' },
+      ],
+    };
+  } else if (type === 'checkbox') {
+    field.type = 'checkbox';
+    field.options = [
+      { value: 'opcion_1', label: 'Opción 1' },
+      { value: 'opcion_2', label: 'Opción 2' },
+    ];
+  } else if (type === 'date') {
+    field.type = 'date';
+    field.frontend = { mask: 'date' };
+  } else {
+    field.type = type;
+  }
+
+  adminSections[sectionIdx].fields.push(field);
+  const fIdx = adminSections[sectionIdx].fields.length - 1;
+  editingField = { sectionIdx, fieldIdx: fIdx };
+  renderQuestions();
+
+  setTimeout(() => {
+    const card = document.querySelector(`.gf-question-card[data-section="${sectionIdx}"][data-field="${fIdx}"]`);
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const labelInput = card?.querySelector('.gf-q-edit-row:first-child .gf-q-input');
+    if (labelInput) setTimeout(() => labelInput.focus(), 100);
+  }, 100);
+}
 
   const fieldNum = adminSections[sectionIdx].fields.length + 1;
   const name = `campo_${sectionIdx}_${fieldNum}`;

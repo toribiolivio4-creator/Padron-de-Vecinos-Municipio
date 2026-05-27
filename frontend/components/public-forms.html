@@ -1,0 +1,40 @@
+<div id="panel-public-forms" class="panel">
+
+  <div id="vista-lista-public-forms">
+    <div class="section-header">
+      <div class="section-title-block">
+        <h2 class="section-title">Formularios Públicos</h2>
+        <p class="section-subtitle">Completá los formularios disponibles</p>
+      </div>
+    </div>
+
+    <div class="forms-grid" id="public-forms-grid">
+      <div class="table-loading-wrapper">
+        <span class="spinner"></span> Cargando formularios...
+      </div>
+    </div>
+  </div>
+
+  <div id="vista-formulario-publico" style="display:none;">
+    <div class="section-header">
+      <div class="section-title-block">
+        <h2 class="section-title" id="public-form-title">Formulario</h2>
+        <p class="section-subtitle" id="public-form-desc"></p>
+      </div>
+      <button class="btn btn-secondary" onclick="volverListaPublicForms()">
+        ← Volver
+      </button>
+    </div>
+
+    <div class="form-card" style="max-width:800px;">
+      <div id="public-form-dinamico"></div>
+      <div class="form-actions">
+        <button class="btn btn-success" onclick="enviarFormularioPublico()">
+          ➕ Enviar
+        </button>
+      </div>
+      <div id="public-form-status" class="form-status"></div>
+    </div>
+  </div>
+
+</div>

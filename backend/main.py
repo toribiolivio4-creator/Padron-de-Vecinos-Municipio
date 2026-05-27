@@ -30,12 +30,6 @@ async def lifespan(app: FastAPI):
         print(f"⚠️ No se pudo conectar a la base de datos al iniciar: {e}")
         print("   Los endpoints de DB fallarán hasta que PostgreSQL esté disponible.")
 
-    try:
-        from backend.import_data import import_all
-        import_all()
-    except Exception as e:
-        print(f"⚠️ Error al importar datos a MongoDB: {e}")
-
     yield
 
 

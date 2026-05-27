@@ -1,8 +1,25 @@
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from datetime import datetime
+from typing import Any, Dict
 
 from backend.mongo_db import get_collection, ping
 
 router = APIRouter(prefix="/submissions", tags=["form-submissions"])
+
+
+@router.post("/{form_name}", status_code=201)
+def submit_form(form_name: str, data: Dict[str, Any]):
+    if not ping():
+        raise HTTPException(status_code=503, detail="MongoDB no disponible")
+
+    col = get_collection(form_name)
+    doc = {
+        **data,
+        "_submitted_at": datetime.utcnow().isoformat(),
+    }
+    result = col.insert_one(doc)
+    return {"id": str(result.inserted_id), "message": "Formulario guardado correctamente"}
 
 
 @router.get("/{collection_name}")

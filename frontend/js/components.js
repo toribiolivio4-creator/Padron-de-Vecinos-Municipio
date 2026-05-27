@@ -22,4 +22,5 @@ loadComponent("header",  "/frontend/components/hearder.html");
 loadComponent("tabs",    "/frontend/components/tabs.html");
 loadComponent("padron",  "/frontend/components/padron.html");
 loadComponent("admin",       "/frontend/components/admin.html");
+loadComponent("public-forms", "/frontend/components/public-forms.html");
 loadComponent("footer",      "/frontend/components/footer.html");

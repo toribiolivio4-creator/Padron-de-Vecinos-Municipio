@@ -2,7 +2,7 @@ from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 
 MONGO_URL = "mongodb://172.23.160.1:27017"
-MONGO_DB_NAME = "padron_vecinos"
+MONGO_DB_NAME = "Personas"
 
 _client = None
 _db = None
