@@ -1,3 +1,77 @@
+let activeSortMenu = null;
+
+function cerrarSortMenu() {
+    if (activeSortMenu) {
+        activeSortMenu.remove();
+        activeSortMenu = null;
+    }
+}
+
+function toggleSortMenu(event, column) {
+    event.stopPropagation();
+    cerrarSortMenu();
+
+    const th = event.currentTarget;
+    const rect = th.getBoundingClientRect();
+
+    const menu = document.createElement('div');
+    menu.className = 'sort-dropdown';
+    menu.style.top = rect.bottom + 'px';
+    menu.style.left = rect.left + 'px';
+
+    const asc = document.createElement('div');
+    asc.className = 'sort-option' + (sortState.column === column && sortState.direction === 'asc' ? ' sort-active' : '');
+    asc.textContent = '↑ Ascendente';
+    asc.onclick = (e) => { e.stopPropagation(); ordenarTabla(column, 'asc'); cerrarSortMenu(); };
+
+    const desc = document.createElement('div');
+    desc.className = 'sort-option' + (sortState.column === column && sortState.direction === 'desc' ? ' sort-active' : '');
+    desc.textContent = '↓ Descendente';
+    desc.onclick = (e) => { e.stopPropagation(); ordenarTabla(column, 'desc'); cerrarSortMenu(); };
+
+    menu.appendChild(asc);
+    menu.appendChild(desc);
+    document.body.appendChild(menu);
+    activeSortMenu = menu;
+}
+
+document.addEventListener('click', cerrarSortMenu);
+
+function ordenarTabla(column, direction) {
+    sortState.column = column;
+    sortState.direction = direction;
+
+    const sorted = [...padronData].sort((a, b) => {
+        const va = (a[column] ?? '').toString().toLowerCase();
+        const vb = (b[column] ?? '').toString().toLowerCase();
+        if (column === 'fecha_nacimiento') {
+            const da = va ? new Date(va) : 0;
+            const db = vb ? new Date(vb) : 0;
+            return direction === 'asc' ? da - db : db - da;
+        }
+        if (direction === 'asc') return va.localeCompare(vb);
+        return vb.localeCompare(va);
+    });
+
+    renderTabla(sorted);
+}
+
+function renderSortIndicators() {
+    document.querySelectorAll('.sortable-th').forEach(th => {
+        const arrow = th.querySelector('.sort-arrow');
+        const col = th.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+        if (arrow) {
+            if (sortState.column === col) {
+                arrow.textContent = sortState.direction === 'asc' ? '↑' : '↓';
+                th.classList.add('sort-active-th');
+            } else {
+                arrow.textContent = '▾';
+                th.classList.remove('sort-active-th');
+            }
+        }
+    });
+}
+
 async function cargarPadronCompleto() {
     try {
         const res  = await fetch(`${API_BASE}/personas`);
@@ -40,6 +114,8 @@ function renderTabla(filas) {
             </td>
         </tr>
     `).join('');
+
+    renderSortIndicators();
 }
 
 function formatFecha(f) {
@@ -49,22 +125,46 @@ function formatFecha(f) {
     } catch { return f; }
 }
 
+function getSearchColumn() {
+    const sel = document.getElementById('search-column-select');
+    return sel ? sel.value : 'dni';
+}
+
+function cambiarColumnaBusqueda() {
+    const col = getSearchColumn();
+    const labels = {
+        dni: 'DNI',
+        apellidos: 'Apellido',
+        nombres: 'Nombre',
+        fecha_nacimiento: 'Fecha Nac.',
+        domicilio: 'Domicilio',
+        localidad: 'Localidad',
+        celular: 'Teléfono',
+        email: 'Email',
+    };
+    const input = document.getElementById('buscar-padron');
+    if (input) input.placeholder = `Buscar por ${labels[col] || col}...`;
+    const val = input ? input.value : '';
+    if (val) filtrarPadron(val);
+}
+
 function filtrarPadron(valor) {
     clearTimeout(padronDebounce);
     padronDebounce = setTimeout(() => {
-        const q = valor.trim();
+        const q = valor.trim().toLowerCase();
+        const col = getSearchColumn();
         if (!q) {
             renderTabla(padronData);
             return;
         }
         const filtrado = padronData.filter(p =>
-            String(p.dni ?? '').includes(q)
+            String(p[col] ?? '').toLowerCase().includes(q)
         );
         renderTabla(filtrado);
     }, 200);
 }
 
 function limpiarBusquedaPadron() {
-    const input = document.getElementById('buscar-dni-padron');
+    const input = document.getElementById('buscar-padron');
     if (input) { input.value = ''; filtrarPadron(''); }
 }

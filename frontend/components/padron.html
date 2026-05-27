@@ -14,9 +14,19 @@
 
         <div class="search-bar-wrapper">
             <div class="search-input-group">
+                <select id="search-column-select" class="search-column-select" onchange="cambiarColumnaBusqueda()">
+                    <option value="dni">DNI</option>
+                    <option value="apellidos">Apellido</option>
+                    <option value="nombres">Nombre</option>
+                    <option value="fecha_nacimiento">Fecha Nac.</option>
+                    <option value="domicilio">Domicilio</option>
+                    <option value="localidad">Localidad</option>
+                    <option value="celular">Teléfono</option>
+                    <option value="email">Email</option>
+                </select>
                 <input
                     type="text"
-                    id="buscar-dni-padron"
+                    id="buscar-padron"
                     class="search-input"
                     placeholder="Buscar por DNI..."
                     oninput="filtrarPadron(this.value)"
@@ -31,7 +41,9 @@
             <table class="data-table" id="tabla-padron">
                 <thead>
                     <tr>
-                        <th>DNI</th>
+                        <th class="sortable-th" onclick="toggleSortMenu(event, 'dni')">
+                            DNI <span class="sort-arrow">▾</span>
+                        </th>
                         <th>Apellido</th>
                         <th>Nombre</th>
                         <th>Fecha Nac.</th>

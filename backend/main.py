@@ -13,10 +13,9 @@ from contextlib import asynccontextmanager
 import backend.models
 from backend.models import Persona, LogEvento, FormDefinition, FormFieldMigration
 from backend.database import engine, Base
-from backend.routes import personas_router
+from backend.routes import personas_router, form_submissions_router
 from backend.routes.google_forms import router as google_forms_router
 from backend.routes.form_admin import router as form_admin_router
-from backend.routes.public_forms import router as public_forms_router
 
 
 # ─────────────────────────────────────────────
@@ -30,6 +29,13 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"⚠️ No se pudo conectar a la base de datos al iniciar: {e}")
         print("   Los endpoints de DB fallarán hasta que PostgreSQL esté disponible.")
+
+    try:
+        from backend.import_data import import_all
+        import_all()
+    except Exception as e:
+        print(f"⚠️ Error al importar datos a MongoDB: {e}")
+
     yield
 
 
@@ -136,7 +142,7 @@ def serve_frontend():
 app.include_router(personas_router)
 app.include_router(google_forms_router)
 app.include_router(form_admin_router)
-app.include_router(public_forms_router)
+app.include_router(form_submissions_router)
 
 # ─────────────────────────────────────────────
 # Auto-descubrimiento de routers generados
