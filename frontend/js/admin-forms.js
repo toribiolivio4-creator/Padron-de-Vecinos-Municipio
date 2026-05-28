@@ -1,140 +1,20 @@
 let adminFormsData = [];
 let adminEditingForm = null;
 let adminSections = [];
-let editingField = null; // {sectionIdx, fieldIdx} or null
-let editingSectionIdx = null; // which section is being renamed (inline)
+let editingField = null;
+let editingSectionIdx = null;
 
-// ─────────────────────────────────────────────
-// Carga inicial
-// ─────────────────────────────────────────────
-
-async function cargarFormsAdmin() {
-  try {
-    const res = await fetch(`${API_BASE}/admin/forms`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    adminFormsData = await res.json();
-    renderFormsGrid(adminFormsData);
-  } catch (err) {
-    console.error('Error cargando formularios:', err);
-    const grid = document.getElementById('admin-forms-grid');
-    if (grid) grid.innerHTML = `<div class="table-empty">No se pudo cargar los formularios.</div>`;
-  }
-}
-
-function renderFormsGrid(forms) {
-  const grid = document.getElementById('admin-forms-grid');
-  const count = document.getElementById('admin-forms-count');
-  if (!grid) return;
-
-  if (count) count.textContent = `${forms.length} formulario${forms.length !== 1 ? 's' : ''}`;
-
-  if (forms.length === 0) {
-    grid.innerHTML = `<div class="table-empty">No hay formularios creados. Hacé click en "Nuevo Formulario" para empezar.</div>`;
-    return;
-  }
-
-  grid.innerHTML = forms.map(f => {
-    const def = JSON.parse(f.definition || '{"forms":[{}]}');
-    const formData = def.forms?.[0] || {};
-    const sections = formData.sections || [];
-    const totalFields = sections.reduce((sum, s) => sum + (s.fields?.length || 0), 0);
-
-    return `
-      <div class="admin-form-card" onclick="editarFormulario('${f.name}')">
-        <div class="admin-form-card-header">
-          <h3 class="admin-form-card-title">${f.title}</h3>
-          <span class="admin-form-card-badge">${sections.length} secciones</span>
-        </div>
-        <p class="admin-form-card-desc">${f.description || 'Sin descripción'}</p>
-        <div class="admin-form-card-meta">
-          <span>${totalFields} campos</span>
-          <span>${f.prefix}</span>
-          <span>${f.model_name}</span>
-        </div>
-        <div class="admin-form-card-actions">
-          <button class="btn-row-edit" title="Editar" onclick="event.stopPropagation(); editarFormulario('${f.name}')">✏️</button>
-          <button class="btn-row-delete" title="Eliminar" onclick="event.stopPropagation(); eliminarFormularioAdmin('${f.name}')">🗑️</button>
-        </div>
-      </div>`;
-  }).join('');
-}
-
-function filtrarFormsAdmin(valor) {
-  const q = valor.trim().toLowerCase();
-  if (!q) { renderFormsGrid(adminFormsData); return; }
-  const filtrados = adminFormsData.filter(f =>
-    f.name.toLowerCase().includes(q) ||
-    f.title.toLowerCase().includes(q) ||
-    (f.description || '').toLowerCase().includes(q) ||
-    f.prefix.toLowerCase().includes(q)
-  );
-  renderFormsGrid(filtrados);
-}
-
-function limpiarBusquedaForms() {
-  const input = document.getElementById('buscar-form-admin');
-  if (input) { input.value = ''; filtrarFormsAdmin(''); }
-}
-
-// ─────────────────────────────────────────────
-// Navegación
-// ─────────────────────────────────────────────
-
-function mostrarCrearFormulario() {
+function initAdminEditor() {
   adminEditingForm = null;
   adminSections = [];
-
-  document.getElementById('vista-lista-admin').style.display = 'none';
-  document.getElementById('vista-editor-admin').style.display = '';
+  editingField = null;
+  editingSectionIdx = null;
 
   document.getElementById('gf-status-badge').textContent = 'Nuevo formulario';
-
   document.getElementById('gf-form-title').value = '';
   document.getElementById('gf-form-desc').value = '';
-  editingField = null;
-  editingSectionIdx = null;
-
   renderQuestions();
 }
-
-function volverListaAdmin() {
-  document.getElementById('vista-editor-admin').style.display = 'none';
-  document.getElementById('vista-lista-admin').style.display = '';
-  document.getElementById('admin-migration-status').style.display = 'none';
-  editingField = null;
-  editingSectionIdx = null;
-  cargarFormsAdmin();
-}
-
-async function editarFormulario(name) {
-  try {
-    const res = await fetch(`${API_BASE}/admin/forms/${name}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const form = await res.json();
-
-    adminEditingForm = form;
-    adminSections = form.sections || [];
-
-    document.getElementById('vista-lista-admin').style.display = 'none';
-    document.getElementById('vista-editor-admin').style.display = '';
-
-    document.getElementById('gf-status-badge').textContent = `Editando: ${form.title}`;
-
-    document.getElementById('gf-form-title').value = form.title;
-    document.getElementById('gf-form-desc').value = form.description || '';
-    editingField = null;
-    editingSectionIdx = null;
-
-    renderQuestions();
-  } catch (err) {
-    console.error('Error cargando formulario:', err);
-    showToast('Error cargando formulario');
-  }
-}
-
-// ─────────────────────────────────────────────
-// Guardar
-// ─────────────────────────────────────────────
 
 function slugify(text) {
   return text.toLowerCase()
@@ -207,7 +87,7 @@ async function guardarFormulario() {
     }
     if (res.ok) {
       showToast('Formulario guardado correctamente');
-      volverListaAdmin();
+      resetFormulario();
     } else {
       const err = await res.json().catch(() => ({}));
       showToast(`Error: ${err.detail || res.statusText}`);
@@ -217,25 +97,17 @@ async function guardarFormulario() {
   }
 }
 
-async function eliminarFormularioAdmin(name) {
-  if (!confirm(`Eliminar el formulario "${name}"? Esta acción no borra la tabla de la BD.`)) return;
-  try {
-    const res = await fetch(`${API_BASE}/admin/forms/${name}`, { method: 'DELETE' });
-    if (res.ok) {
-      showToast('Formulario eliminado');
-      cargarFormsAdmin();
-    } else {
-      const err = await res.json().catch(() => ({}));
-      showToast(`Error: ${err.detail || res.statusText}`);
-    }
-  } catch (e) {
-    showToast('Error de conexión');
-  }
-}
+function resetFormulario() {
+  adminEditingForm = null;
+  adminSections = [];
 
-// ─────────────────────────────────────────────
-// Renderizado de preguntas (Google Forms style)
-// ─────────────────────────────────────────────
+  document.getElementById('gf-status-badge').textContent = 'Nuevo formulario';
+  document.getElementById('gf-form-title').value = '';
+  document.getElementById('gf-form-desc').value = '';
+  editingField = null;
+  editingSectionIdx = null;
+  renderQuestions();
+}
 
 function renderQuestions() {
   const container = document.getElementById('gf-questions-container');
@@ -308,7 +180,6 @@ function renderQuestionCard(sIdx, fIdx, field) {
         </div>
       </div>
 
-      <!-- Panel de edición inline (se expande al hacer click) -->
       <div class="gf-question-edit-panel" ${isEditing ? '' : 'style="display:none;"'}>
         <div class="gf-q-edit-row">
           <div class="gf-q-edit-field gf-q-edit-field-full">
@@ -335,7 +206,6 @@ function renderQuestionCard(sIdx, fIdx, field) {
           </div>
         </div>
 
-        <!-- Opciones para select / checkbox -->
         ${renderFieldOptionsEditor(sIdx, fIdx, field)}
 
         <div class="gf-q-edit-row gf-q-edit-actions">
@@ -444,18 +314,13 @@ function escapeHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// ─────────────────────────────────────────────
-// Interacciones de preguntas
-// ─────────────────────────────────────────────
-
 function onQuestionClick(sIdx, fIdx) {
   if (editingField && editingField.sectionIdx === sIdx && editingField.fieldIdx === fIdx) {
-    return; // ya está seleccionada
+    return;
   }
   editingField = { sectionIdx: sIdx, fieldIdx: fIdx };
   editingSectionIdx = null;
   renderQuestions();
-  // Scroll al panel de edición
   setTimeout(() => {
     const card = document.querySelector(`.gf-question-card[data-section="${sIdx}"][data-field="${fIdx}"]`);
     if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -584,10 +449,6 @@ function eliminarOpcionCampo(sIdx, fIdx, oIdx) {
   renderQuestions();
 }
 
-// ─────────────────────────────────────────────
-// Agregar preguntas
-// ─────────────────────────────────────────────
-
 function mostrarSelectorTipoPregunta(sectionIdx) {
   window._pendingSectionIdx = sectionIdx;
   document.getElementById('gf-type-selector').style.display = 'flex';
@@ -655,48 +516,6 @@ function createFieldInSection(sectionIdx, type) {
   }, 100);
 }
 
-  const fieldNum = adminSections[sectionIdx].fields.length + 1;
-  const name = `campo_${sectionIdx}_${fieldNum}`;
-
-  let field = { name, label: '', type: 'string', required: false };
-
-  if (type === 'select') {
-    field.type = 'string';
-    field.frontend = {
-      widget: 'select',
-      options: [
-        { value: 'opcion_1', label: 'Opción 1' },
-        { value: 'opcion_2', label: 'Opción 2' },
-      ],
-    };
-  } else if (type === 'checkbox') {
-    field.type = 'checkbox';
-    field.options = [
-      { value: 'opcion_1', label: 'Opción 1' },
-      { value: 'opcion_2', label: 'Opción 2' },
-    ];
-  } else {
-    field.type = type;
-  }
-
-  adminSections[sectionIdx].fields.push(field);
-  const fIdx = adminSections[sectionIdx].fields.length - 1;
-  editingField = { sectionIdx, fieldIdx: fIdx };
-  renderQuestions();
-
-  setTimeout(() => {
-    const card = document.querySelector(`.gf-question-card[data-section="${sectionIdx}"][data-field="${fIdx}"]`);
-    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    // Focus the question label input
-    const labelInput = card?.querySelector('.gf-q-edit-row:first-child .gf-q-input');
-    if (labelInput) setTimeout(() => labelInput.focus(), 100);
-  }, 100);
-}
-
-// ─────────────────────────────────────────────
-// Secciones
-// ─────────────────────────────────────────────
-
 function agregarSeccion() {
   const id = `section-${Date.now()}`;
   adminSections.push({
@@ -712,10 +531,6 @@ function eliminarSeccion(idx) {
   editingField = null;
   renderQuestions();
 }
-
-// ─────────────────────────────────────────────
-// Duplicar, mover, eliminar campos
-// ─────────────────────────────────────────────
 
 function duplicarCampo(sIdx, fIdx) {
   if (!adminSections[sIdx]?.fields[fIdx]) return;
@@ -749,112 +564,4 @@ function eliminarCampo(sIdx, fIdx) {
   adminSections[sIdx].fields.splice(fIdx, 1);
   editingField = null;
   renderQuestions();
-}
-
-// ─────────────────────────────────────────────
-// Preview, Migraciones, Generación de código
-// ─────────────────────────────────────────────
-
-// Estas funciones se mantienen del original
-
-async function aplicarMigracion() {
-  if (!adminEditingForm) {
-    showToast('Guardá el formulario primero');
-    return;
-  }
-  const btn = document.getElementById('btn-migrate');
-  btn.disabled = true;
-  btn.textContent = 'Migrando...';
-  try {
-    const res = await fetch(`${API_BASE}/admin/forms/${adminEditingForm.name}/migrate`, { method: 'POST' });
-    const result = await res.json();
-    if (result.success) {
-      const added = result.columns_added?.length || 0;
-      showToast(`Migración aplicada: ${added} columna${added !== 1 ? 's' : ''} agregada${added !== 1 ? 's' : ''}`);
-    } else {
-      showToast(`Error en migración: ${result.errors?.join(', ') || 'Error desconocido'}`);
-    }
-    showMigrationStatus(result);
-  } catch (e) {
-    showToast('Error de conexión');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Migrar BD';
-  }
-}
-
-async function verEstadoMigracion() {
-  if (!adminEditingForm) {
-    showToast('Guardá el formulario primero');
-    return;
-  }
-  try {
-    const res = await fetch(`${API_BASE}/admin/forms/${adminEditingForm.name}/migration-status`);
-    const status = await res.json();
-    showMigrationStatus(status);
-  } catch (e) {
-    showToast('Error de conexión');
-  }
-}
-
-function showMigrationStatus(result) {
-  const panel = document.getElementById('admin-migration-status');
-  if (!panel) return;
-  const added = result.columns_added || [];
-  const existing = result.columns_existing || [];
-  const errors = result.errors || [];
-  const missing = result.missing_columns || [];
-
-  let html = '<div class="migration-result">';
-  html += '<h4>Resultado de Migración</h4>';
-  if (added.length > 0) html += `<div class="migration-success"><strong>Columnas agregadas:</strong> ${added.join(', ')}</div>`;
-  if (existing.length > 0) html += `<div class="migration-info"><strong>Columnas existentes:</strong> ${existing.length} columnas</div>`;
-  if (missing.length > 0) html += `<div class="migration-warning"><strong>Columnas faltantes:</strong> ${missing.map(c => `${c.name} (${c.sql_type})`).join(', ')}</div>`;
-  if (errors.length > 0) html += `<div class="migration-error"><strong>Errores:</strong> ${errors.join('; ')}</div>`;
-  if (!added.length && !missing.length && !errors.length) {
-    html += '<div class="migration-info">Todo está sincronizado. No se requieren migraciones.</div>';
-  }
-  html += '</div>';
-  panel.innerHTML = html;
-  panel.style.display = '';
-}
-
-async function generarCodigo() {
-  if (!adminEditingForm) {
-    showToast('Guardá el formulario primero');
-    return;
-  }
-  const btn = document.getElementById('btn-generate');
-  btn.disabled = true;
-  btn.textContent = 'Generando...';
-  try {
-    const res = await fetch(`${API_BASE}/admin/forms/${adminEditingForm.name}/generate`, { method: 'POST' });
-    const result = await res.json();
-
-    let html = `<p>${result.message}</p>`;
-    html += '<p><strong>Archivos generados:</strong></p><ul>';
-    (result.files_generated || []).forEach(f => { html += `<li><code>${f}</code></li>`; });
-    html += '</ul>';
-    if (result.migration_result) {
-      const mr = result.migration_result;
-      html += `<p><strong>Migración:</strong> ${mr.columns_added?.length || 0} columna${mr.columns_added?.length !== 1 ? 's' : ''} agregada${mr.columns_added?.length !== 1 ? 's' : ''}</p>`;
-    }
-
-    // Show in modal instead
-    mostrarModalResultado(html);
-    showToast('Código generado correctamente');
-  } catch (e) {
-    showToast('Error generando código');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Generar';
-  }
-}
-
-function mostrarModalResultado(html) {
-  const modal = document.getElementById('modal-generacion');
-  if (modal) {
-    document.getElementById('generacion-result').innerHTML = html;
-    modal.style.display = 'flex';
-  }
 }

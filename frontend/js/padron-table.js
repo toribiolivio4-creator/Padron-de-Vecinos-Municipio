@@ -14,6 +14,8 @@ function toggleSortMenu(event, column) {
     const th = event.currentTarget;
     const rect = th.getBoundingClientRect();
 
+    const isDni = column === 'dni';
+
     const menu = document.createElement('div');
     menu.className = 'sort-dropdown';
     menu.style.top = rect.bottom + 'px';
@@ -21,12 +23,12 @@ function toggleSortMenu(event, column) {
 
     const asc = document.createElement('div');
     asc.className = 'sort-option' + (sortState.column === column && sortState.direction === 'asc' ? ' sort-active' : '');
-    asc.textContent = '↑ Ascendente';
+    asc.textContent = isDni ? '↑ Ascendente' : '↑ A-Z';
     asc.onclick = (e) => { e.stopPropagation(); ordenarTabla(column, 'asc'); cerrarSortMenu(); };
 
     const desc = document.createElement('div');
     desc.className = 'sort-option' + (sortState.column === column && sortState.direction === 'desc' ? ' sort-active' : '');
-    desc.textContent = '↓ Descendente';
+    desc.textContent = isDni ? '↓ Descendente' : '↓ Z-A';
     desc.onclick = (e) => { e.stopPropagation(); ordenarTabla(column, 'desc'); cerrarSortMenu(); };
 
     menu.appendChild(asc);

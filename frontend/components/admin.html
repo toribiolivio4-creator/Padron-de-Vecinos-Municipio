@@ -1,41 +1,11 @@
 <div id="panel-admin" class="panel">
 
-  <!-- ===== LISTA DE FORMULARIOS ===== -->
-  <div id="vista-lista-admin">
-    <div class="section-header">
-      <div class="section-title-block">
-        <h2 class="section-title">Administrador de Formularios</h2>
-        <p class="section-subtitle">Crear, editar y gestionar formularios dinámicos</p>
-      </div>
-      <button class="btn btn-primary" onclick="mostrarCrearFormulario()">
-        + Nuevo Formulario
-      </button>
-    </div>
-
-    <div class="search-bar-wrapper">
-      <div class="search-input-group">
-        <input type="text" id="buscar-form-admin" class="search-input" placeholder="Buscar formulario..." oninput="filtrarFormsAdmin(this.value)" autocomplete="off" />
-        <button class="search-clear" onclick="limpiarBusquedaForms()" title="Limpiar búsqueda">✕</button>
-      </div>
-      <span class="search-count" id="admin-forms-count"></span>
-    </div>
-
-    <div class="forms-grid" id="admin-forms-grid">
-      <div class="table-loading-wrapper">
-        <span class="spinner"></span> Cargando formularios...
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== EDITOR TIPO GOOGLE FORMS ===== -->
-  <div id="vista-editor-admin" style="display:none;">
+  <!-- ===== EDITOR TIPO GOOGLE FORMS (CREAR FORMULARIOS) ===== -->
+  <div id="vista-editor-admin">
 
     <!-- Barra superior -->
     <div class="gf-topbar">
       <div class="gf-topbar-left">
-        <button class="gf-btn-back" onclick="volverListaAdmin()">
-          ← Volver
-        </button>
         <span id="gf-status-badge" class="gf-status-badge">Nuevo formulario</span>
       </div>
       <div class="gf-topbar-right">

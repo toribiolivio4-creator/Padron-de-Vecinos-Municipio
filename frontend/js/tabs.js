@@ -20,7 +20,7 @@ function switchTab(tab) {
     });
 
     if (tab === 'admin') {
-        cargarFormsAdmin();
+        initAdminEditor();
     }
     if (tab === 'public-forms') {
         cargarPublicForms();
