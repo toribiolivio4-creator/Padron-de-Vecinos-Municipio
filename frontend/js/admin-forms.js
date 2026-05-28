@@ -114,10 +114,7 @@ function renderQuestions() {
   if (!container) return;
 
   if (adminSections.length === 0) {
-    container.innerHTML = `
-      <div class="gf-empty-state">
-        <p>Empezá agregando una pregunta o sección</p>
-      </div>`;
+    container.innerHTML = '';
     return;
   }
 
