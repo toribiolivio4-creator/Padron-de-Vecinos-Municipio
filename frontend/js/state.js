@@ -3,3 +3,7 @@ let isUpdateMode   = { padron: false };
 let padronData     = [];
 let padronDebounce = null;
 let sortState = { column: null, direction: null };
+let localidadFilter = '';
+let domicilioFilter = '';
+let celularFilter = '';
+let edadFilter = { mode: '', value: 0 };

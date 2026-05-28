@@ -50,10 +50,18 @@
                         <th class="sortable-th" onclick="toggleSortMenu(event, 'nombres')">
                             Nombre <span class="sort-arrow">▾</span>
                         </th>
-                        <th>Fecha Nac.</th>
-                        <th>Domicilio</th>
-                        <th>Localidad</th>
-                        <th>Teléfono</th>
+                        <th class="sortable-th" style="position:relative; cursor:pointer;" onclick="toggleFilterEdad(event)">
+                            Fecha Nac. <span class="filter-btn" style="pointer-events:none;" data-field="fecha_nacimiento">▼</span>
+                        </th>
+                        <th class="sortable-th" style="position:relative; cursor:pointer;" onclick="toggleFilter(event, 'domicilio', 'domicilio')">
+                            Domicilio <span class="filter-btn" style="pointer-events:none;" data-field="domicilio">▼</span>
+                        </th>
+                        <th class="sortable-th" style="position:relative;" onclick="toggleFilter(event, 'localidad', 'localidad')">
+                            Localidad <span class="filter-btn" style="pointer-events:none;" data-field="localidad">▼</span>
+                        </th>
+                        <th class="sortable-th" style="position:relative; cursor:pointer;" onclick="toggleFilter(event, 'celular', 'teléfono')">
+                            Teléfono <span class="filter-btn" style="pointer-events:none;" data-field="celular">▼</span>
+                        </th>
                         <th>Email</th>
                         <th>Acciones</th>
                     </tr>
