@@ -6,9 +6,20 @@ let editingSectionIdx = null;
 
 function initAdminEditor() {
   adminEditingForm = null;
-  adminSections = [];
   editingField = null;
   editingSectionIdx = null;
+
+  const defaultFields = [
+    { name: 'dni', label: 'DNI', type: 'string', required: true, placeholder: 'Ej: 30123456', frontend: { mask: 'numeric', validation: { pattern: '^\\d{7,8}$', message: 'El DNI debe tener 7 u 8 dígitos numéricos' } } },
+    { name: 'nombres', label: 'Nombre/s', type: 'string', required: true, placeholder: 'Nombre/s', frontend: { validation: { min_length: 2, message: 'El nombre debe tener al menos 2 caracteres' } } },
+    { name: 'apellidos', label: 'Apellido/s', type: 'string', required: true, placeholder: 'Apellido/s', frontend: { validation: { min_length: 2, message: 'El apellido debe tener al menos 2 caracteres' } } },
+    { name: 'fecha_nacimiento', label: 'Fecha de Nacimiento', type: 'date', required: true, placeholder: 'DD/MM/AAAA', frontend: { mask: 'date', validation: { custom: 'validateFechaNacimiento' } } },
+    { name: 'celular', label: 'Teléfono', type: 'string', required: false, placeholder: 'Ej: 2337-123456', frontend: { mask: 'phone', validation: { pattern: '^[\\d\\-]{0,15}$', message: 'Formato inválido. Ej: 2337-123456' } } },
+  ];
+
+  adminSections = [
+    { id: 'section-default', title: 'Datos Personales', icon: '👤', collapsed: false, fields: defaultFields },
+  ];
 
   document.getElementById('gf-status-badge').textContent = 'Nuevo formulario';
   document.getElementById('gf-form-title').value = '';
