@@ -218,6 +218,36 @@ function attachPublicFieldListeners() {
       el.addEventListener('blur', () => validatePublicField(field));
     });
   });
+
+  autoFillFromPadron();
+}
+
+function autoFillFromPadron() {
+  const dniField = document.querySelector('[id^="pub-field-"][data-field="dni"]');
+  if (!dniField) return;
+
+  const autoFillMap = ['nombres', 'apellidos', 'fecha_nacimiento', 'celular'];
+
+  dniField.addEventListener('blur', async () => {
+    const dni = dniField.value.trim();
+    if (!dni || dni.length < 7) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/personas/${dni}`);
+      if (!res.ok) return;
+
+      const persona = await res.json();
+      autoFillMap.forEach((fieldName) => {
+        const target = document.getElementById(`pub-field-${fieldName}`);
+        if (target && persona[fieldName] != null) {
+          target.value = persona[fieldName];
+          clearPublicError(fieldName);
+        }
+      });
+    } catch (e) {
+      // Persona no encontrada — no autocompletar
+    }
+  });
 }
 
 function validatePublicField(field) {
@@ -314,6 +344,8 @@ async function enviarFormularioPublico() {
     if (res.ok) {
       setPublicFormStatus('✅ Formulario enviado correctamente.', 'success');
       document.getElementById('public-form-dinamico').innerHTML = '';
+      const actions = document.getElementById('public-form-actions');
+      if (actions) actions.style.display = 'none';
       showToast('✅ Formulario enviado.');
     } else {
       const err = await res.json().catch(() => ({}));
