@@ -367,6 +367,78 @@ function setPublicFormStatus(msg, tipo) {
   el.className = `form-status ${tipo}`;
 }
 
+async function verRespuestasAnteriores() {
+  if (!currentPublicForm) return;
+  const formName = currentPublicForm.name;
+
+  document.getElementById('modal-respuestas').style.display = '';
+  document.getElementById('modal-respuestas-title').textContent = currentPublicForm.title;
+  document.getElementById('modal-respuestas-loading').style.display = '';
+  document.getElementById('modal-respuestas-empty').style.display = 'none';
+  document.getElementById('modal-respuestas-table-wrapper').style.display = 'none';
+
+  try {
+    const res = await fetch(`${API_BASE}/submissions/${formName}?limit=100`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const submissions = await res.json();
+
+    document.getElementById('modal-respuestas-loading').style.display = 'none';
+
+    if (submissions.length === 0) {
+      document.getElementById('modal-respuestas-empty').style.display = '';
+      return;
+    }
+
+    const fields = Object.keys(submissions[0]).filter(k => k !== '_submitted_at');
+    const thead = document.getElementById('modal-respuestas-thead');
+    const tbody = document.getElementById('modal-respuestas-tbody');
+
+    thead.innerHTML = `<tr>
+      <th>#</th>
+      ${fields.map(f => `<th>${f}</th>`).join('')}
+      <th>Enviado</th>
+    </tr>`;
+
+    tbody.innerHTML = submissions.map((sub, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        ${fields.map(f => `<td>${formatValue(sub[f])}</td>`).join('')}
+        <td>${formatDate(sub._submitted_at)}</td>
+      </tr>
+    `).join('');
+
+    document.getElementById('modal-respuestas-table-wrapper').style.display = '';
+  } catch (err) {
+    console.error('Error cargando respuestas:', err);
+    document.getElementById('modal-respuestas-loading').style.display = 'none';
+    document.getElementById('modal-respuestas-empty').style.display = '';
+    document.getElementById('modal-respuestas-empty').textContent = 'Error al cargar las respuestas.';
+  }
+}
+
+function cerrarModalRespuestas(event) {
+  if (event && event.target !== event.currentTarget) return;
+  document.getElementById('modal-respuestas').style.display = 'none';
+}
+
+function formatValue(val) {
+  if (val === null || val === undefined) return '';
+  if (Array.isArray(val)) return val.join(', ');
+  if (typeof val === 'boolean') return val ? 'Sí' : 'No';
+  return String(val);
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString('es-AR', {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit'
+    });
+  } catch { return iso; }
+}
+
 async function enviarFormularioPublico() {
   if (!validateAllPublicFields()) {
     setPublicFormStatus('⚠️ Corregí los errores antes de continuar.', 'error');

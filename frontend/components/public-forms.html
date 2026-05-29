@@ -21,9 +21,14 @@
         <h2 class="section-title" id="public-form-title">Formulario</h2>
         <p class="section-subtitle" id="public-form-desc"></p>
       </div>
-      <button class="btn btn-secondary" onclick="volverListaPublicForms()">
-        ← Volver
-      </button>
+      <div class="editor-header-actions">
+        <button class="btn btn-secondary btn-sm" onclick="verRespuestasAnteriores()">
+          📋 Ver respuestas
+        </button>
+        <button class="btn btn-secondary" onclick="volverListaPublicForms()">
+          ← Volver
+        </button>
+      </div>
     </div>
 
     <div class="form-card" style="max-width:800px;">
@@ -34,6 +39,28 @@
         </button>
       </div>
       <div id="public-form-status" class="form-status"></div>
+    </div>
+  </div>
+
+  <!-- Modal de respuestas anteriores -->
+  <div id="modal-respuestas" class="gf-overlay" style="display:none;" onclick="cerrarModalRespuestas(event)">
+    <div class="modal-respuestas-content" onclick="event.stopPropagation()">
+      <div class="modal-respuestas-header">
+        <h3>Respuestas anteriores: <span id="modal-respuestas-title"></span></h3>
+        <button class="modal-respuestas-close" onclick="cerrarModalRespuestas()">&times;</button>
+      </div>
+      <div class="modal-respuestas-body">
+        <div id="modal-respuestas-loading" class="table-loading-wrapper">
+          <span class="spinner"></span> Cargando respuestas...
+        </div>
+        <div id="modal-respuestas-empty" class="table-empty" style="display:none;">No hay respuestas anteriores.</div>
+        <div id="modal-respuestas-table-wrapper" style="display:none;">
+          <table class="data-table" id="modal-respuestas-table">
+            <thead id="modal-respuestas-thead"></thead>
+            <tbody id="modal-respuestas-tbody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
