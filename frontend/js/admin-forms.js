@@ -397,9 +397,10 @@ function onFieldTypeChange(sIdx, fIdx, newType) {
     }
   } else if (newType === 'checkbox') {
     field.type = 'checkbox';
-    if (field.frontend) delete field.frontend.widget;
-    if (!field.options) {
-      field.options = [
+    field.frontend = field.frontend || {};
+    delete field.frontend.widget;
+    if (!field.frontend.options) {
+      field.frontend.options = [
         { value: 'opcion_1', label: 'Opción 1' },
         { value: 'opcion_2', label: 'Opción 2' },
       ];
@@ -422,11 +423,16 @@ function onFieldTypeChange(sIdx, fIdx, newType) {
   renderQuestions();
 }
 
+function getFieldOptions(field) {
+  if (field.frontend?.options) return field.frontend.options;
+  if (field.type === 'checkbox' && field.options) return field.options;
+  return null;
+}
+
 function onFieldOptionChange(sIdx, fIdx, oIdx, value) {
   if (!adminSections[sIdx]?.fields[fIdx]) return;
   const field = adminSections[sIdx].fields[fIdx];
-  const isSelect = field.frontend?.widget === 'select';
-  const opts = isSelect ? field.frontend.options : field.options;
+  const opts = getFieldOptions(field);
   if (opts?.[oIdx]) {
     opts[oIdx].label = value.trim() || opts[oIdx].value;
   }
@@ -435,24 +441,21 @@ function onFieldOptionChange(sIdx, fIdx, oIdx, value) {
 function agregarOpcionCampo(sIdx, fIdx) {
   if (!adminSections[sIdx]?.fields[fIdx]) return;
   const field = adminSections[sIdx].fields[fIdx];
-  const isSelect = field.frontend?.widget === 'select';
-  const opts = isSelect ? field.frontend.options : field.options;
-  const num = (opts?.length || 0) + 1;
-  const opt = { value: `opcion_${num}`, label: `Opción ${num}` };
-  if (isSelect) {
-    field.frontend.options.push(opt);
-  } else {
-    field.options.push(opt);
+  field.frontend = field.frontend || {};
+  if (!getFieldOptions(field)) {
+    field.frontend.options = [];
   }
+  const opts = field.frontend.options;
+  const num = (opts.length || 0) + 1;
+  opts.push({ value: `opcion_${num}`, label: `Opción ${num}` });
   renderQuestions();
 }
 
 function eliminarOpcionCampo(sIdx, fIdx, oIdx) {
   if (!adminSections[sIdx]?.fields[fIdx]) return;
   const field = adminSections[sIdx].fields[fIdx];
-  const isSelect = field.frontend?.widget === 'select';
-  const opts = isSelect ? field.frontend.options : field.options;
-  if (opts.length <= 1) return;
+  const opts = getFieldOptions(field);
+  if (!opts || opts.length <= 1) return;
   opts.splice(oIdx, 1);
   renderQuestions();
 }
@@ -500,10 +503,12 @@ function createFieldInSection(sectionIdx, type) {
     };
   } else if (type === 'checkbox') {
     field.type = 'checkbox';
-    field.options = [
-      { value: 'opcion_1', label: 'Opción 1' },
-      { value: 'opcion_2', label: 'Opción 2' },
-    ];
+    field.frontend = {
+      options: [
+        { value: 'opcion_1', label: 'Opción 1' },
+        { value: 'opcion_2', label: 'Opción 2' },
+      ],
+    };
   } else if (type === 'date') {
     field.type = 'date';
     field.frontend = { mask: 'date' };

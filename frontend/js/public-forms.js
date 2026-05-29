@@ -129,6 +129,26 @@ function renderPublicField(field) {
       </div>`;
   }
 
+  const chkOptions = field.frontend?.options || field.options;
+  if (field.type === 'checkbox' && chkOptions && chkOptions.length > 0) {
+    const checkboxes = chkOptions.map((opt, oIdx) => `
+      <label class="checkbox-label" style="display:block;margin:4px 0;">
+        <input type="checkbox" id="pub-field-${field.name}-${oIdx}"
+               name="pub-field-${field.name}" value="${opt.value}"
+               data-field="${field.name}" />
+        <span class="checkbox-text">${opt.label}</span>
+      </label>
+    `).join('');
+    return `
+      <div class="form-group" id="pub-group-${field.name}">
+        <label class="form-label">${field.label}${requiredMark}</label>
+        <div class="input-wrapper" style="padding:4px 0;">
+          ${checkboxes}
+        </div>
+        <div class="field-error" id="pub-error-${field.name}"></div>
+      </div>`;
+  }
+
   switch (widget) {
     case 'select':
       const options = (fe.options || []).map((opt) =>
@@ -241,6 +261,10 @@ function autoFillFromPadron() {
         const target = document.getElementById(`pub-field-${fieldName}`);
         if (target && persona[fieldName] != null) {
           target.value = persona[fieldName];
+          if (fieldName !== 'celular') {
+            target.readOnly = true;
+            target.classList.add('input-readonly');
+          }
           clearPublicError(fieldName);
         }
       });
@@ -251,10 +275,22 @@ function autoFillFromPadron() {
 }
 
 function validatePublicField(field) {
+  const errorEl = document.getElementById(`pub-error-${field.name}`);
+
+  const chkOptions = field.frontend?.options || field.options;
+  if (field.type === 'checkbox' && chkOptions && chkOptions.length > 0) {
+    const checked = document.querySelectorAll(`input[name="pub-field-${field.name}"]:checked`);
+    if (field.required && checked.length === 0) {
+      if (errorEl) errorEl.textContent = `${field.label} es obligatorio`;
+      return false;
+    }
+    clearPublicError(field.name);
+    return true;
+  }
+
   const el = document.getElementById(`pub-field-${field.name}`);
   if (!el) return true;
   const val = el.type === 'checkbox' ? el.checked : el.value.trim();
-  const errorEl = document.getElementById(`pub-error-${field.name}`);
 
   if (field.required && !val) {
     if (errorEl) errorEl.textContent = `${field.label} es obligatorio`;
@@ -305,9 +341,15 @@ function getPublicFormData() {
   const data = {};
   (currentPublicForm.sections || []).forEach((section) => {
     (section.fields || []).forEach((field) => {
+      const chkOptions = field.frontend?.options || field.options;
+      if (field.type === 'checkbox' && chkOptions && chkOptions.length > 0) {
+        const checked = document.querySelectorAll(`input[name="pub-field-${field.name}"]:checked`);
+        data[field.name] = Array.from(checked).map(cb => cb.value);
+        return;
+      }
       const el = document.getElementById(`pub-field-${field.name}`);
       if (!el) return;
-      if (field.type === 'boolean' || field.type === 'checkbox') {
+      if (field.type === 'boolean') {
         data[field.name] = el.checked;
       } else {
         const val = el.value.trim();

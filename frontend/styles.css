@@ -822,6 +822,13 @@
     background: #fff;
 }
 
+.form-input.input-readonly {
+    background: #eef2ee;
+    color: #4a5a4a;
+    cursor: default;
+    border-color: #c8d6c5;
+}
+
 /* --- Botones de acción del formulario --- */
 .form-actions {
     display: flex;
