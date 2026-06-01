@@ -477,7 +477,7 @@ def generate_from_form_definition(form_def, db_session=None) -> Dict:
     Genera todo el código desde una definición de formulario (ORM).
     Primero aplica migraciones, luego genera los archivos.
     """
-    from backend.crud.form_migrations import apply_form_migrations
+    from backend.crud.forms import apply_form_migrations
 
     form_data = extract_form_data(form_def)
     name = form_data["name"]
