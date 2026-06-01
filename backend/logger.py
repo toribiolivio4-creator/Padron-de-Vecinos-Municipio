@@ -9,7 +9,7 @@ import json
 import logging
 from typing import Optional
 
-from backend.database import SessionLocal
+from backend.db.database import SessionLocal
 
 # Consola como respaldo (sin archivo de log)
 logging.basicConfig(

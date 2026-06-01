@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import Any, Dict
 
-from backend.mongo_db import get_collection, ping
+from backend.db.mongo_db import get_collection, ping
 
 router = APIRouter(prefix="/submissions", tags=["form-submissions"])
 

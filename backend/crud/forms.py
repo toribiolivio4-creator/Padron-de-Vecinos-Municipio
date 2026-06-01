@@ -11,7 +11,7 @@ from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
-from backend.database import engine
+from backend.db.database import engine
 from backend.models import FormDefinition, FormFieldMigration
 from backend.schemas import FormDefinitionCreate, FormDefinitionUpdate
 

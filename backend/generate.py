@@ -150,7 +150,7 @@ def generate_routes(form_data: Dict) -> str:
     lines.append("from typing import List, Optional")
     lines.append("")
     lines.append(f"from backend.schemas.auto_{name} import {class_name}Base, {class_name}Create")
-    lines.append("from backend.database import get_db")
+    lines.append("from backend.db.database import get_db")
     lines.append("from backend.crud.utils import _get_generic, _upsert_generic, _apply_fields")
     lines.append("from backend.logger import log_actualizar, log_eliminar, log_error")
     lines.append("")

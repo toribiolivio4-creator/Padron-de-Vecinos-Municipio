@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, DateTime, Integer, Text
 from sqlalchemy.sql import func
-from backend.database import Base
+from backend.db.database import Base
 
 
 class LogEvento(Base):

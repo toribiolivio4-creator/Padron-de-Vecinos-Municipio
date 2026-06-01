@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Date, Boolean
-from backend.database import Base
+from backend.db.database import Base
 
 
 class Persona(Base):

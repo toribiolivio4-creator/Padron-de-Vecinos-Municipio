@@ -17,7 +17,7 @@ import os
 
 import backend.crud as crud
 import backend.schemas as schemas
-from backend.database import get_db
+from backend.db.database import get_db
 
 router = APIRouter(prefix="/webhook", tags=["webhooks"])
 

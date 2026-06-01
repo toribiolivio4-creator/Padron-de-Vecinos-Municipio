@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 
 import backend.models
 from backend.models import Persona, LogEvento, FormDefinition, FormFieldMigration
-from backend.database import engine, Base
+from backend.db.database import engine, Base
 from backend.routes import personas_router, form_submissions_router
 from backend.routes.google_forms import router as google_forms_router
 from backend.routes.form_admin import router as form_admin_router

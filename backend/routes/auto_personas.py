@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from backend.schemas.auto_personas import PersonaBase, PersonaCreate
-from backend.database import get_db
+from backend.db.database import get_db
 from backend.crud.utils import _get_generic, _upsert_generic, _apply_fields
 from backend.logger import log_actualizar, log_eliminar, log_error
 
