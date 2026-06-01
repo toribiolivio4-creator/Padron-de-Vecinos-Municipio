@@ -1,18 +1,25 @@
+#!/usr/bin/env python3
 """
-Generador de código desde definiciones de formulario en la BD.
+Generador de formularios schema-driven.
 
-Lee un FormDefinition y genera:
-  - backend/schemas/auto_<name>.py
-  - backend/routes/auto_<name>.py
-  - frontend/js/form-schema.js
+Lee form-definitions.json o un FormDefinition de la BD y genera:
+  - backend/schemas/auto_<form>.py   (schemas Pydantic)
+  - backend/routes/auto_<form>.py    (rutas FastAPI)
+  - frontend/js/form-schema.js       (esquema frontend)
+  - backend/crud/utils.py            (funciones genéricas CRUD)
+
+Uso como script:
+    python3 backend/generate.py
+
+Uso como módulo:
+    from backend.generate import generate_from_form_definition
+    result = generate_from_form_definition(form_def, db_session)
 """
 
 import json
+import os
 from pathlib import Path
-from typing import Dict, List
-
-from backend.models import FormDefinition
-from backend.crud.form_migrations import apply_form_migrations, get_table_name
+from typing import Dict, List, Optional
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -27,10 +34,15 @@ TYPE_MAP_PYTHON = {
 }
 
 
-def extract_form_data(form_def: FormDefinition) -> Dict:
-    """Extrae los datos del formulario desde la definición JSON."""
-    definition = json.loads(form_def.definition)
-    return definition["forms"][0]
+# ─────────────────────────────────────────────
+# Helpers
+# ─────────────────────────────────────────────
+
+def load_definitions():
+    """Carga definiciones desde form-definitions.json."""
+    json_path = ROOT / "form-definitions.json"
+    with open(json_path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
 def all_fields(form_data: Dict) -> List[Dict]:
@@ -41,15 +53,29 @@ def all_fields(form_data: Dict) -> List[Dict]:
     return fields
 
 
+def extract_form_data(form_def) -> Dict:
+    """Extrae los datos del formulario desde una definición ORM (FormDefinition)."""
+    if isinstance(form_def, dict):
+        return form_def["forms"][0]
+    definition = json.loads(form_def.definition)
+    return definition["forms"][0]
+
+
+# ─────────────────────────────────────────────
+# Generador de schemas Pydantic
+# ─────────────────────────────────────────────
+
 def generate_pydantic_schema(form_data: Dict) -> str:
-    """Genera el código del schema Pydantic."""
     name = form_data["name"]
     fields = all_fields(form_data)
     model_name = form_data.get("model_name", name.capitalize())
 
     lines = []
     lines.append(f'# Schema auto-generado para "{name}" — NO EDITAR MANUALMENTE')
-    lines.append(f'# Generado desde form_definitions (BD)')
+    if "definition" in form_data or "forms" in form_data:
+        lines.append(f'# Generado desde form_definitions (BD)')
+    else:
+        lines.append(f'# Generado desde form-definitions.json')
     lines.append("")
     lines.append("from pydantic import BaseModel, Field")
 
@@ -100,8 +126,11 @@ def generate_pydantic_schema(form_data: Dict) -> str:
     return "\n".join(lines)
 
 
+# ─────────────────────────────────────────────
+# Generador de rutas FastAPI
+# ─────────────────────────────────────────────
+
 def generate_routes(form_data: Dict) -> str:
-    """Genera el código de las rutas FastAPI."""
     name = form_data["name"]
     prefix = form_data["prefix"]
     tags = form_data.get("tags", [name])
@@ -110,9 +139,11 @@ def generate_routes(form_data: Dict) -> str:
     model_name = form_data.get("model_name", name.capitalize())
     class_name = model_name
 
+    source = "BD" if ("definition" in form_data or "forms" in form_data) else "form-definitions.json"
+
     lines = []
     lines.append(f'# Rutas auto-generadas para "{name}" — NO EDITAR MANUALMENTE')
-    lines.append(f'# Generado desde form_definitions (BD)')
+    lines.append(f'# Generado desde {source}')
     lines.append("")
     lines.append("from fastapi import APIRouter, Depends, HTTPException, Query")
     lines.append("from sqlalchemy.orm import Session")
@@ -232,13 +263,20 @@ def generate_routes(form_data: Dict) -> str:
     return "\n".join(lines)
 
 
+# ─────────────────────────────────────────────
+# Generador de form-schema.js (frontend)
+# ─────────────────────────────────────────────
+
 def generate_frontend_schema(form_data: Dict) -> str:
-    """Genera el schema JavaScript para el frontend."""
     sections = form_data.get("sections", [])
 
     lines = []
-    lines.append("// form-schema.js — AUTO-GENERADO desde form_definitions (BD)")
-    lines.append("// NO EDITAR MANUALMENTE. Modificar desde el panel admin.")
+    if "definition" in form_data or "forms" in form_data:
+        lines.append("// form-schema.js — AUTO-GENERADO desde form_definitions (BD)")
+        lines.append("// NO EDITAR MANUALMENTE. Modificar desde el panel admin.")
+    else:
+        lines.append("// form-schema.js — AUTO-GENERADO desde form-definitions.json")
+        lines.append("// NO EDITAR MANUALMENTE. Modificar el JSON y correr generate.py")
     lines.append("")
     lines.append("const FORM_SCHEMA = {")
     lines.append("    sections: [")
@@ -340,11 +378,107 @@ def generate_frontend_schema(form_data: Dict) -> str:
     return "\n".join(lines)
 
 
-def generate_from_form_definition(form_def: FormDefinition, db_session=None) -> Dict:
+# ─────────────────────────────────────────────
+# Generador de CRUD utils genéricos
+# ─────────────────────────────────────────────
+
+def generate_crud_utils() -> str:
+    lines = []
+    lines.append("# crud/utils.py — Funciones genéricas auto-generadas")
+    lines.append("# NO EDITAR MANUALMENTE si hay funciones marcadas como auto-generadas")
+    lines.append("")
+    lines.append("from sqlalchemy.orm import Session")
+    lines.append("from typing import Optional, Tuple, Any")
+    lines.append("")
+    lines.append("")
+    lines.append("def _get_generic(db: Session, model, pk_value: str, pk_field: str = \"dni\"):")
+    lines.append('    """Busca un registro genérico por su clave primaria."""')
+    lines.append(f"    return db.query(model).filter(getattr(model, pk_field) == pk_value).first()")
+    lines.append("")
+    lines.append("")
+    lines.append("def _apply_fields(obj: Any, data: dict) -> None:")
+    lines.append('    """Aplica un diccionario de campos a un objeto ORM."""')
+    lines.append("    for key, value in data.items():")
+    lines.append("        if hasattr(obj, key):")
+    lines.append("            setattr(obj, key, value)")
+    lines.append("")
+    lines.append("")
+    lines.append("def _upsert_generic(db: Session, model, fields: dict, pk_field: str = \"dni\") -> Tuple[Any, bool]:")
+    lines.append('    """Crea o actualiza un registro genérico. Devuelve (instancia, es_nuevo)."""')
+    lines.append("    pk_value = fields.get(pk_field)")
+    lines.append("    if not pk_value:")
+    lines.append('        raise ValueError(f"Primary key field \'{pk_field}\' is required")')
+    lines.append("")
+    lines.append("    instance = _get_generic(db, model, pk_value, pk_field)")
+    lines.append("    is_new = instance is None")
+    lines.append("")
+    lines.append("    if instance:")
+    lines.append("        _apply_fields(instance, fields)")
+    lines.append("    else:")
+    lines.append("        instance = model(**fields)")
+    lines.append("        db.add(instance)")
+    lines.append("")
+    lines.append("    return instance, is_new")
+    lines.append("")
+
+    return "\n".join(lines)
+
+
+# ─────────────────────────────────────────────
+# API desde JSON
+# ─────────────────────────────────────────────
+
+def generate_from_json():
+    """Genera todo el código desde form-definitions.json."""
+    definitions = load_definitions()
+    schemas_dir = ROOT / "backend" / "schemas"
+    routes_dir = ROOT / "backend" / "routes"
+    frontend_js = ROOT / "frontend" / "js"
+
+    schemas_dir.mkdir(parents=True, exist_ok=True)
+    routes_dir.mkdir(parents=True, exist_ok=True)
+    frontend_js.mkdir(parents=True, exist_ok=True)
+
+    files = []
+    for form_def in definitions["forms"]:
+        name = form_def["name"]
+        form_data = form_def
+
+        schema_path = schemas_dir / f"auto_{name}.py"
+        schema_content = generate_pydantic_schema(form_data)
+        schema_path.write_text(schema_content, encoding="utf-8")
+        files.append(str(schema_path))
+
+        routes_path = routes_dir / f"auto_{name}.py"
+        routes_content = generate_routes(form_data)
+        routes_path.write_text(routes_content, encoding="utf-8")
+        files.append(str(routes_path))
+
+    schema_js_path = frontend_js / "form-schema.js"
+    js_content = generate_frontend_schema(definitions["forms"][0])
+    schema_js_path.write_text(js_content, encoding="utf-8")
+    files.append(str(schema_js_path))
+
+    crud_utils_path = ROOT / "backend" / "crud" / "utils.py"
+    if not crud_utils_path.exists():
+        crud_content = generate_crud_utils()
+        crud_utils_path.write_text(crud_content, encoding="utf-8")
+        files.append(str(crud_utils_path))
+
+    return files
+
+
+# ─────────────────────────────────────────────
+# API desde BD
+# ─────────────────────────────────────────────
+
+def generate_from_form_definition(form_def, db_session=None) -> Dict:
     """
-    Genera todo el código desde una definición de formulario.
+    Genera todo el código desde una definición de formulario (ORM).
     Primero aplica migraciones, luego genera los archivos.
     """
+    from backend.crud.form_migrations import apply_form_migrations
+
     form_data = extract_form_data(form_def)
     name = form_data["name"]
     files_generated = []
@@ -381,3 +515,22 @@ def generate_from_form_definition(form_def: FormDefinition, db_session=None) -> 
         "files": files_generated,
         "migration": migration_result,
     }
+
+
+# ─────────────────────────────────────────────
+# Main (script)
+# ─────────────────────────────────────────────
+
+def main():
+    print("📋 Leyendo form-definitions.json...")
+    files = generate_from_json()
+
+    print(f"\n✨ Generación completada. {len(files)} archivos procesados.")
+    for f in files:
+        print(f"   ✅ {f}")
+    print("\n   Las rutas se cargan automáticamente desde main.py (auto-descubrimiento).")
+    print("   Reiniciá el servidor para que los cambios tengan efecto.")
+
+
+if __name__ == "__main__":
+    main()

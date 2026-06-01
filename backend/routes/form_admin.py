@@ -147,7 +147,7 @@ def generar_codigo(name: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=f"Formulario '{name}' no encontrado")
 
     try:
-        from backend.generate_from_db import generate_from_form_definition
+        from backend.generate import generate_from_form_definition
         result = generate_from_form_definition(form_def)
         return {
             "message": "Código generado correctamente. Las rutas se cargan automáticamente al reiniciar el servidor.",
