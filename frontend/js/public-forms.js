@@ -416,15 +416,49 @@ function renderRespuestasTable(submissions) {
     <th>#</th>
     ${fields.map(f => `<th>${f}</th>`).join('')}
     <th>Enviado</th>
+    <th style="width:50px;">Acción</th>
   </tr>`;
 
-  tbody.innerHTML = submissions.map((sub, i) => `
+  tbody.innerHTML = submissions.map((sub, i) => {
+    const encoded = encodeURIComponent(JSON.stringify(sub));
+    return `
     <tr>
       <td>${i + 1}</td>
       ${fields.map(f => `<td>${formatValue(sub[f])}</td>`).join('')}
       <td>${formatDate(sub._submitted_at)}</td>
-    </tr>
-  `).join('');
+      <td style="text-align:center;">
+        <button class="btn-row-view" onclick="verDetalleRespuesta('${encoded}')" title="Ver detalle">👁️</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function verDetalleRespuesta(encoded) {
+  const sub = JSON.parse(decodeURIComponent(encoded));
+  const body = document.getElementById('detalle-respuesta-body');
+  const fields = Object.keys(sub).filter(k => k !== '_submitted_at');
+
+  body.innerHTML = `
+    <div class="detalle-grid">
+      ${fields.map(f => `
+        <div class="detalle-item">
+          <span class="detalle-label">${f}</span>
+          <span class="detalle-value">${formatValue(sub[f]) || '—'}</span>
+        </div>
+      `).join('')}
+      <div class="detalle-item">
+        <span class="detalle-label">Enviado</span>
+        <span class="detalle-value">${formatDate(sub._submitted_at) || '—'}</span>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modal-detalle-respuesta').style.display = '';
+}
+
+function cerrarDetalleRespuesta(event) {
+  if (event && event.target !== event.currentTarget) return;
+  document.getElementById('modal-detalle-respuesta').style.display = 'none';
 }
 
 function filtrarRespuestas(query) {

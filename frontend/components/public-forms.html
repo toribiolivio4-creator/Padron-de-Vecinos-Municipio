@@ -71,4 +71,16 @@
     </div>
   </div>
 
+  <!-- Modal de detalle de respuesta -->
+  <div id="modal-detalle-respuesta" class="gf-overlay" style="display:none;" onclick="cerrarDetalleRespuesta(event)">
+    <div class="detalle-respuesta-content" onclick="event.stopPropagation()">
+      <div class="detalle-respuesta-header">
+        <h3>Detalle de respuesta</h3>
+        <button class="modal-respuestas-close" onclick="cerrarDetalleRespuesta()">&times;</button>
+      </div>
+      <div class="detalle-respuesta-body" id="detalle-respuesta-body">
+      </div>
+    </div>
+  </div>
+
 </div>
