@@ -3,21 +3,19 @@
 Endpoint que recibe respuestas de Google Forms vía Apps Script.
 
 Flujo:
-  Google Forms → Apps Script (onFormSubmit) → POST /webhook/google-forms → BD
+  Google Forms → Apps Script (onFormSubmit) → POST /webhook/google-forms → MongoDB
 
 Agregar al main.py:
     from backend.routes.google_forms import router as google_forms_router
     app.include_router(google_forms_router)
 """
 
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Header
-from sqlalchemy.orm import Session
 from typing import Optional
 import os
 
-import backend.crud as crud
-import backend.schemas as schemas
-from backend.db.database import get_db
+from backend.db.mongo_db import get_collection, ping
 
 router = APIRouter(prefix="/webhook", tags=["webhooks"])
 
@@ -75,14 +73,22 @@ class GoogleFormsPadron(BaseModel):
     summary="Webhook: Google Forms → Padrón de Vecinos",
     description=(
         "Recibe la respuesta de un formulario de Google Forms "
-        "y la inserta/actualiza en la base de datos. "
+        "y la guarda en MongoDB. "
         "Llamar desde Apps Script con `onFormSubmit`."
     ),
 )
 def webhook_padron(
     data: GoogleFormsPadron,
-    db: Session = Depends(get_db),
     _: None = Depends(_verificar_token),
 ):
-    padron_data = schemas.PadronCreate(**data.model_dump())
-    return crud.upsert_padron(db, padron_data)
+    if not ping():
+        raise HTTPException(status_code=503, detail="MongoDB no disponible")
+
+    col = get_collection("google_forms_padron")
+    doc = {
+        **data.model_dump(),
+        "_submitted_at": datetime.utcnow().isoformat(),
+    }
+    doc["fecha_nacimiento"] = str(doc["fecha_nacimiento"]) if doc.get("fecha_nacimiento") else None
+    result = col.insert_one(doc)
+    return {"id": str(result.inserted_id), "message": "Respuesta guardada en MongoDB correctamente"}
