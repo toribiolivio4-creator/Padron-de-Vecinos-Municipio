@@ -433,7 +433,7 @@ function renderRespuestasTable(submissions) {
     return `
     <tr>
       <td>${i + 1}</td>
-      ${fields.map(f => `<td>${formatValue(sub[f])}</td>`).join('')}
+      ${fields.map(f => `<td>${formatValueWithLabel(f, sub[f])}</td>`).join('')}
       <td>${formatDate(sub._submitted_at)}</td>
       <td style="text-align:center;">
         <button class="btn-row-view" onclick="verDetalleRespuesta('${encoded}')" title="Ver detalle">👁️</button>
@@ -452,7 +452,7 @@ function verDetalleRespuesta(encoded) {
       ${fields.map(f => `
         <div class="detalle-item">
           <span class="detalle-label">${getFieldLabel(f)}</span>
-          <span class="detalle-value">${formatValue(sub[f]) || '—'}</span>
+          <span class="detalle-value">${formatValueWithLabel(f, sub[f]) || '—'}</span>
         </div>
       `).join('')}
       <div class="detalle-item">
@@ -496,8 +496,31 @@ function cerrarModalRespuestas(event) {
   document.getElementById('modal-respuestas').style.display = 'none';
 }
 
-function formatValue(val) {
+function getFieldOptions(fieldName) {
+  if (!currentPublicForm || !currentPublicForm.sections) return null;
+  for (const section of currentPublicForm.sections) {
+    const field = (section.fields || []).find(f => f.name === fieldName);
+    if (field) {
+      const opts = field.frontend?.options || field.options || null;
+      return opts;
+    }
+  }
+  return null;
+}
+
+function formatValueWithLabel(fieldName, val) {
   if (val === null || val === undefined) return '';
+  const opts = getFieldOptions(fieldName);
+  if (opts) {
+    if (Array.isArray(val)) {
+      return val.map(v => {
+        const opt = opts.find(o => String(o.value) === String(v));
+        return opt ? opt.label : v;
+      }).join(', ');
+    }
+    const opt = opts.find(o => String(o.value) === String(val));
+    if (opt) return opt.label;
+  }
   if (Array.isArray(val)) return val.join(', ');
   if (typeof val === 'boolean') return val ? 'Sí' : 'No';
   return String(val);
