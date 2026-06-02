@@ -401,6 +401,15 @@ async function verRespuestasAnteriores() {
   }
 }
 
+function getFieldLabel(fieldName) {
+  if (!currentPublicForm || !currentPublicForm.sections) return fieldName;
+  for (const section of currentPublicForm.sections) {
+    const field = (section.fields || []).find(f => f.name === fieldName);
+    if (field) return field.label || fieldName;
+  }
+  return fieldName;
+}
+
 function renderRespuestasTable(submissions) {
   if (submissions.length === 0) {
     document.getElementById('modal-respuestas-tbody').innerHTML =
@@ -414,7 +423,7 @@ function renderRespuestasTable(submissions) {
 
   thead.innerHTML = `<tr>
     <th>#</th>
-    ${fields.map(f => `<th>${f}</th>`).join('')}
+    ${fields.map(f => `<th>${getFieldLabel(f)}</th>`).join('')}
     <th>Enviado</th>
     <th style="width:50px;">Acción</th>
   </tr>`;
@@ -442,7 +451,7 @@ function verDetalleRespuesta(encoded) {
     <div class="detalle-grid">
       ${fields.map(f => `
         <div class="detalle-item">
-          <span class="detalle-label">${f}</span>
+          <span class="detalle-label">${getFieldLabel(f)}</span>
           <span class="detalle-value">${formatValue(sub[f]) || '—'}</span>
         </div>
       `).join('')}
