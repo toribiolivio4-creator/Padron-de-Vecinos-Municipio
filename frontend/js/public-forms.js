@@ -1,5 +1,6 @@
 let publicFormsData = [];
 let currentPublicForm = null;
+let currentSubmissions = [];
 
 async function cargarPublicForms() {
   try {
@@ -376,37 +377,21 @@ async function verRespuestasAnteriores() {
   document.getElementById('modal-respuestas-loading').style.display = '';
   document.getElementById('modal-respuestas-empty').style.display = 'none';
   document.getElementById('modal-respuestas-table-wrapper').style.display = 'none';
+  document.getElementById('search-respuestas').value = '';
 
   try {
     const res = await fetch(`${API_BASE}/submissions/${formName}?limit=100`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const submissions = await res.json();
+    currentSubmissions = await res.json();
 
     document.getElementById('modal-respuestas-loading').style.display = 'none';
 
-    if (submissions.length === 0) {
+    if (currentSubmissions.length === 0) {
       document.getElementById('modal-respuestas-empty').style.display = '';
       return;
     }
 
-    const fields = Object.keys(submissions[0]).filter(k => k !== '_submitted_at');
-    const thead = document.getElementById('modal-respuestas-thead');
-    const tbody = document.getElementById('modal-respuestas-tbody');
-
-    thead.innerHTML = `<tr>
-      <th>#</th>
-      ${fields.map(f => `<th>${f}</th>`).join('')}
-      <th>Enviado</th>
-    </tr>`;
-
-    tbody.innerHTML = submissions.map((sub, i) => `
-      <tr>
-        <td>${i + 1}</td>
-        ${fields.map(f => `<td>${formatValue(sub[f])}</td>`).join('')}
-        <td>${formatDate(sub._submitted_at)}</td>
-      </tr>
-    `).join('');
-
+    renderRespuestasTable(currentSubmissions);
     document.getElementById('modal-respuestas-table-wrapper').style.display = '';
   } catch (err) {
     console.error('Error cargando respuestas:', err);
@@ -414,6 +399,53 @@ async function verRespuestasAnteriores() {
     document.getElementById('modal-respuestas-empty').style.display = '';
     document.getElementById('modal-respuestas-empty').textContent = 'Error al cargar las respuestas.';
   }
+}
+
+function renderRespuestasTable(submissions) {
+  if (submissions.length === 0) {
+    document.getElementById('modal-respuestas-tbody').innerHTML =
+      `<tr><td colspan="99" class="table-empty">No se encontraron resultados.</td></tr>`;
+    return;
+  }
+
+  const fields = Object.keys(submissions[0]).filter(k => k !== '_submitted_at');
+  const thead = document.getElementById('modal-respuestas-thead');
+  const tbody = document.getElementById('modal-respuestas-tbody');
+
+  thead.innerHTML = `<tr>
+    <th>#</th>
+    ${fields.map(f => `<th>${f}</th>`).join('')}
+    <th>Enviado</th>
+  </tr>`;
+
+  tbody.innerHTML = submissions.map((sub, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      ${fields.map(f => `<td>${formatValue(sub[f])}</td>`).join('')}
+      <td>${formatDate(sub._submitted_at)}</td>
+    </tr>
+  `).join('');
+}
+
+function filtrarRespuestas(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) {
+    renderRespuestasTable(currentSubmissions);
+    return;
+  }
+
+  const filtered = currentSubmissions.filter(sub =>
+    (sub.dni && String(sub.dni).toLowerCase().includes(q)) ||
+    (sub.nombres && String(sub.nombres).toLowerCase().includes(q)) ||
+    (sub.apellidos && String(sub.apellidos).toLowerCase().includes(q))
+  );
+
+  renderRespuestasTable(filtered);
+}
+
+function limpiarBusquedaRespuestas() {
+  document.getElementById('search-respuestas').value = '';
+  renderRespuestasTable(currentSubmissions);
 }
 
 function cerrarModalRespuestas(event) {

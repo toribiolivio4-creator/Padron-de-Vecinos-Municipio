@@ -46,7 +46,14 @@
   <div id="modal-respuestas" class="gf-overlay" style="display:none;" onclick="cerrarModalRespuestas(event)">
     <div class="modal-respuestas-content" onclick="event.stopPropagation()">
       <div class="modal-respuestas-header">
-        <h3>Respuestas anteriores: <span id="modal-respuestas-title"></span></h3>
+        <div style="display:flex; align-items:center; gap:1rem; flex:1; min-width:0;">
+          <h3 style="white-space:nowrap;">Respuestas anteriores: <span id="modal-respuestas-title"></span></h3>
+          <div class="search-input-group" style="max-width:300px; margin-left:auto;">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="search-respuestas" class="search-input" placeholder="Buscar por DNI, nombre, apellido..." oninput="filtrarRespuestas(this.value)">
+            <button class="search-clear" onclick="limpiarBusquedaRespuestas()" title="Limpiar búsqueda">&times;</button>
+          </div>
+        </div>
         <button class="modal-respuestas-close" onclick="cerrarModalRespuestas()">&times;</button>
       </div>
       <div class="modal-respuestas-body">
