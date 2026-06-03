@@ -425,7 +425,7 @@ function renderRespuestasTable(submissions) {
     <th>#</th>
     ${fields.map(f => `<th>${getFieldLabel(f)}</th>`).join('')}
     <th>Enviado</th>
-    <th style="width:50px;">Acción</th>
+    <th style="width:50px;">Detalles</th>
   </tr>`;
 
   tbody.innerHTML = submissions.map((sub, i) => {
