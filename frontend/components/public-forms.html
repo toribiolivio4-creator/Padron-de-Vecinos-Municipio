@@ -83,4 +83,25 @@
     </div>
   </div>
 
+  <!-- Modal de confirmación de eliminación -->
+  <div id="modal-confirmar-eliminar-respuesta" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.45); align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:14px; border-top:4px solid var(--rojo); box-shadow:0 8px 40px rgba(0,0,0,0.18); padding:32px 28px; max-width:420px; width:90%; font-family:var(--font);">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+        <span style="font-size:24px;">🗑️</span>
+        <h3 style="font-family:var(--font-head); font-size:16px; font-weight:700; color:var(--verde-oscuro);">Eliminar respuesta</h3>
+      </div>
+      <p style="font-size:14px; color:var(--texto); line-height:1.6; margin-bottom:24px;">
+        ¿Estás seguro de que querés eliminar esta respuesta? Se desactivará y no aparecerá en la lista.
+      </p>
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button onclick="cerrarModalEliminarRespuesta(false)" style="padding:9px 22px; border-radius:8px; border:1.5px solid var(--gris-borde-mid); background:#fff; color:var(--texto-sec); font-size:13px; font-weight:600; font-family:var(--font-head); cursor:pointer;">
+          Cancelar
+        </button>
+        <button onclick="cerrarModalEliminarRespuesta(true)" style="padding:9px 22px; border-radius:8px; border:none; background:var(--rojo); color:#fff; font-size:13px; font-weight:600; font-family:var(--font-head); cursor:pointer;">
+          Sí, eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>

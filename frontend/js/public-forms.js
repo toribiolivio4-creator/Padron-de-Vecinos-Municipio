@@ -417,7 +417,7 @@ function renderRespuestasTable(submissions) {
     return;
   }
 
-  const fields = Object.keys(submissions[0]).filter(k => k !== '_submitted_at');
+  const fields = Object.keys(submissions[0]).filter(k => k !== '_submitted_at' && k !== '_id_str');
   const thead = document.getElementById('modal-respuestas-thead');
   const tbody = document.getElementById('modal-respuestas-tbody');
 
@@ -444,8 +444,9 @@ function renderRespuestasTable(submissions) {
 
 function verDetalleRespuesta(encoded) {
   const sub = JSON.parse(decodeURIComponent(encoded));
+  const idStr = sub._id_str || '';
   const body = document.getElementById('detalle-respuesta-body');
-  const fields = Object.keys(sub).filter(k => k !== '_submitted_at');
+  const fields = Object.keys(sub).filter(k => k !== '_submitted_at' && k !== '_id_str');
 
   body.innerHTML = `
     <div class="detalle-grid">
@@ -460,9 +461,57 @@ function verDetalleRespuesta(encoded) {
         <span class="detalle-value">${formatDate(sub._submitted_at) || '—'}</span>
       </div>
     </div>
+    <div style="margin-top:1.5rem; display:flex; justify-content:flex-end; gap:0.5rem;">
+      <button class="btn btn-danger" onclick="eliminarRespuesta('${idStr}')">🗑️ Eliminar</button>
+    </div>
   `;
 
   document.getElementById('modal-detalle-respuesta').style.display = '';
+}
+
+let _resolveEliminarRespuesta = null;
+
+function abrirModalEliminarRespuesta() {
+  const modal = document.getElementById('modal-confirmar-eliminar-respuesta');
+  modal.style.display = 'flex';
+  return new Promise((resolve) => {
+    _resolveEliminarRespuesta = resolve;
+  });
+}
+
+function cerrarModalEliminarRespuesta(confirmado) {
+  document.getElementById('modal-confirmar-eliminar-respuesta').style.display = 'none';
+  if (_resolveEliminarRespuesta) {
+    _resolveEliminarRespuesta(confirmado);
+    _resolveEliminarRespuesta = null;
+  }
+}
+
+async function eliminarRespuesta(idStr) {
+  if (!idStr) {
+    showToast('⚠️ No se puede identificar la respuesta.');
+    return;
+  }
+
+  const confirmado = await abrirModalEliminarRespuesta();
+  if (!confirmado) return;
+
+  const formName = currentPublicForm.name;
+  try {
+    const res = await fetch(`${API_BASE}/submissions/${formName}/${idStr}/baja`, {
+      method: 'PUT',
+    });
+    if (res.ok) {
+      showToast('✅ Respuesta eliminada correctamente.');
+      cerrarDetalleRespuesta();
+      verRespuestasAnteriores();
+    } else {
+      const err = await res.json().catch(() => ({}));
+      showToast(`❌ Error: ${err.detail || 'No se pudo eliminar'}`);
+    }
+  } catch (e) {
+    showToast('⚠️ Error de conexión al eliminar');
+  }
 }
 
 function cerrarDetalleRespuesta(event) {

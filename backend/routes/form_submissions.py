@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Any, Dict
+from bson import ObjectId
 
 from backend.db.mongo_db import get_collection, ping
 
@@ -28,8 +29,15 @@ def list_submissions(collection_name: str, limit: int = 50, skip: int = 0):
         raise HTTPException(status_code=503, detail="MongoDB no disponible")
 
     col = get_collection(collection_name)
-    cursor = col.find({}, {"_id": 0}).sort("id", -1).skip(skip).limit(limit)
-    return list(cursor)
+    cursor = col.find(
+        {"_activo": {"$ne": False}}
+    ).sort("_id", -1).skip(skip).limit(limit)
+
+    result = []
+    for doc in cursor:
+        doc["_id_str"] = str(doc.pop("_id"))
+        result.append(doc)
+    return result
 
 
 @router.get("/{collection_name}/{record_id}")
@@ -51,3 +59,25 @@ def count_submissions(collection_name: str):
 
     col = get_collection(collection_name)
     return {"collection": collection_name, "count": col.count_documents({})}
+
+
+@router.put("/{collection_name}/{record_id}/baja")
+def soft_delete_submission(collection_name: str, record_id: str):
+    if not ping():
+        raise HTTPException(status_code=503, detail="MongoDB no disponible")
+
+    try:
+        obj_id = ObjectId(record_id)
+    except:
+        raise HTTPException(status_code=400, detail="ID inválido")
+
+    col = get_collection(collection_name)
+    result = col.update_one(
+        {"_id": obj_id},
+        {"$set": {"_activo": False, "_deactivated_at": datetime.utcnow().isoformat()}}
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Registro no encontrado")
+
+    return {"message": "Registro desactivado correctamente"}
