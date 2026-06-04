@@ -1,19 +1,13 @@
-"""
-CRUD para gestión de definiciones de formularios + migración automática de BD.
-
-Operaciones CRUD sobre formularios y detección/aplicación de cambios en esquema
-(ALTER TABLE) cuando se agregan/quitan campos.
-"""
-
 import json
 from typing import List, Dict, Optional
+
 from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
-from backend.db.database import engine
-from backend.models import FormDefinition, FormFieldMigration
-from backend.schemas import FormDefinitionCreate, FormDefinitionUpdate
+from backend.app.db.session import engine
+from backend.app.forms.models import FormDefinition, FormFieldMigration
+from backend.app.forms.schemas import FormDefinitionCreate, FormDefinitionUpdate
 
 TYPE_MAP_SQL = {
     "string": "VARCHAR",
@@ -26,12 +20,9 @@ TYPE_MAP_SQL = {
 }
 
 
-# ─────────────────────────────────────────────
-# Migraciones
-# ─────────────────────────────────────────────
+# ── Migrations ──
 
 def get_existing_columns(table_name: str) -> List[str]:
-    """Obtiene las columnas existentes en una tabla."""
     inspector = inspect(engine)
     if not inspector.has_table(table_name):
         return []
@@ -39,14 +30,12 @@ def get_existing_columns(table_name: str) -> List[str]:
 
 
 def get_table_name(form_def: FormDefinition) -> str:
-    """Determina el nombre de la tabla para un formulario."""
     if form_def.table_name:
         return form_def.table_name
     return form_def.name
 
 
 def extract_fields_from_definition(definition_json: str) -> List[Dict]:
-    """Extrae todos los campos de una definición JSON de formulario."""
     definition = json.loads(definition_json)
     fields = []
     for section in definition.get("sections", []):
@@ -56,10 +45,6 @@ def extract_fields_from_definition(definition_json: str) -> List[Dict]:
 
 
 def check_form_migration_status(form_def: FormDefinition) -> Dict:
-    """
-    Verifica el estado de migración de un formulario.
-    Retorna qué columnas faltan y cuáles ya existen.
-    """
     table_name = get_table_name(form_def)
     existing_cols = get_existing_columns(table_name)
 
@@ -70,7 +55,7 @@ def check_form_migration_status(form_def: FormDefinition) -> Dict:
             "table_name": table_name,
             "missing_columns": [],
             "existing_columns": [],
-            "note": "La tabla no existe aún. Se creará con create_all().",
+            "note": "La tabla no existe aun. Se creara con create_all().",
         }
 
     fields = extract_fields_from_definition(form_def.definition)
@@ -99,10 +84,6 @@ def check_form_migration_status(form_def: FormDefinition) -> Dict:
 
 
 def apply_form_migrations(form_def: FormDefinition, db: Session) -> Dict:
-    """
-    Aplica las migraciones necesarias para un formulario.
-    Crea la tabla si no existe y agrega columnas faltantes.
-    """
     table_name = get_table_name(form_def)
     existing_cols = get_existing_columns(table_name)
     fields = extract_fields_from_definition(form_def.definition)
@@ -117,7 +98,7 @@ def apply_form_migrations(form_def: FormDefinition, db: Session) -> Dict:
     }
 
     if not existing_cols:
-        result["note"] = "La tabla no existe. Ejecutá create_all() para crearla."
+        result["note"] = "La tabla no existe. Ejecuta create_all() para crearla."
         return result
 
     with engine.connect() as conn:
@@ -177,10 +158,6 @@ def apply_form_migrations(form_def: FormDefinition, db: Session) -> Dict:
 
 
 def sync_all_forms(db: Session) -> List[Dict]:
-    """
-    Sincroniza todos los formularios activos con la base de datos.
-    Retorna una lista de resultados de migración.
-    """
     forms = db.query(FormDefinition).filter(FormDefinition.activo == True).all()
     results = []
 
@@ -202,12 +179,9 @@ def sync_all_forms(db: Session) -> List[Dict]:
     return results
 
 
-# ─────────────────────────────────────────────
-# CRUD
-# ─────────────────────────────────────────────
+# ── CRUD ──
 
 def build_definition_json(data: FormDefinitionCreate) -> str:
-    """Construye el JSON de definición desde un FormDefinitionCreate."""
     definition = {
         "forms": [
             {
@@ -248,17 +222,14 @@ def build_definition_json(data: FormDefinitionCreate) -> str:
 
 
 def get_forms(db: Session) -> List[FormDefinition]:
-    """Lista todos los formularios activos."""
     return db.query(FormDefinition).filter(FormDefinition.activo == True).all()
 
 
 def get_form(db: Session, name: str) -> Optional[FormDefinition]:
-    """Obtiene un formulario por su nombre."""
     return db.query(FormDefinition).filter(FormDefinition.name == name).first()
 
 
 def get_form_full(db: Session, name: str) -> Optional[dict]:
-    """Obtiene un formulario con su definición completa parseada."""
     form_def = get_form(db, name)
     if not form_def:
         return None
@@ -284,7 +255,6 @@ def get_form_full(db: Session, name: str) -> Optional[dict]:
 
 
 def create_form(db: Session, data: FormDefinitionCreate) -> FormDefinition:
-    """Crea un nuevo formulario y aplica migraciones."""
     existing = db.query(FormDefinition).filter(FormDefinition.name == data.name).first()
     if existing:
         if existing.activo:
@@ -324,7 +294,6 @@ def create_form(db: Session, data: FormDefinitionCreate) -> FormDefinition:
 
 
 def update_form(db: Session, name: str, data: FormDefinitionUpdate) -> FormDefinition:
-    """Actualiza un formulario existente y aplica migraciones si hay cambios en los campos."""
     form_def = get_form(db, name)
     if not form_def:
         raise HTTPException(status_code=404, detail=f"Formulario '{name}' no encontrado")
@@ -376,7 +345,6 @@ def update_form(db: Session, name: str, data: FormDefinitionUpdate) -> FormDefin
         ]
 
     form_def.definition = json.dumps(definition, ensure_ascii=False, indent=4)
-
     db.commit()
     db.refresh(form_def)
 
@@ -384,41 +352,33 @@ def update_form(db: Session, name: str, data: FormDefinitionUpdate) -> FormDefin
 
 
 def delete_form(db: Session, name: str) -> bool:
-    """Elimina (soft delete) un formulario."""
     form_def = get_form(db, name)
     if not form_def:
         return False
-
     form_def.activo = False
     db.commit()
     return True
 
 
 def check_migration(db: Session, name: str) -> dict:
-    """Verifica el estado de migración de un formulario."""
     form_def = get_form(db, name)
     if not form_def:
         raise HTTPException(status_code=404, detail=f"Formulario '{name}' no encontrado")
-
     return check_form_migration_status(form_def)
 
 
 def apply_migration(db: Session, name: str) -> dict:
-    """Aplica las migraciones pendientes de un formulario."""
     form_def = get_form(db, name)
     if not form_def:
         raise HTTPException(status_code=404, detail=f"Formulario '{name}' no encontrado")
-
     result = apply_form_migrations(form_def, db)
     db.commit()
     return result
 
 
 def sync_all(db: Session) -> List[dict]:
-    """Sincroniza todos los formularios activos con la BD."""
     return sync_all_forms(db)
 
 
 def get_table_columns(db: Session, table_name: str) -> List[str]:
-    """Obtiene las columnas de una tabla."""
     return get_existing_columns(table_name)

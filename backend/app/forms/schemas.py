@@ -37,7 +37,7 @@ class FieldFrontend(BaseModel):
 class FormField(BaseModel):
     name: str
     label: str
-    type: str  # string, email, date, boolean, integer, number, text
+    type: str
     required: bool = False
     default: Optional[str] = None
     max_length: Optional[int] = None
@@ -55,10 +55,10 @@ class FormSection(BaseModel):
 
 
 class FormDefinitionCreate(BaseModel):
-    name: str = Field(..., description="Identificador único del formulario")
-    title: str = Field(..., description="Título visible del formulario")
+    name: str = Field(..., description="Identificador unico del formulario")
+    title: str = Field(..., description="Titulo visible del formulario")
     description: Optional[str] = None
-    prefix: str = Field(..., description="Prefijo de ruta API (ej: /personas)")
+    prefix: str = Field(..., description="Prefijo de ruta API")
     tags: Optional[List[str]] = None
     primary_key: str = Field(default="id", description="Campo clave primaria")
     model_name: str = Field(..., description="Nombre del modelo SQLAlchemy")

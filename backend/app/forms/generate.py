@@ -3,16 +3,15 @@
 Generador de formularios schema-driven.
 
 Lee form-definitions.json o un FormDefinition de la BD y genera:
-  - backend/schemas/auto_<form>.py   (schemas Pydantic)
-  - backend/routes/auto_<form>.py    (rutas FastAPI)
-  - frontend/js/form-schema.js       (esquema frontend)
-  - backend/crud/utils.py            (funciones genéricas CRUD)
+  - app/generated/auto_<form>.py   (schemas Pydantic)
+  - app/generated/auto_<form>.py   (rutas FastAPI)
+  - frontend/js/form-schema.js     (esquema frontend)
 
 Uso como script:
-    python3 backend/generate.py
+    python3 -m backend.app.forms.generate
 
 Uso como módulo:
-    from backend.generate import generate_from_form_definition
+    from backend.app.forms.generate import generate_from_form_definition
     result = generate_from_form_definition(form_def, db_session)
 """
 
@@ -21,7 +20,7 @@ import os
 from pathlib import Path
 from typing import Dict, List, Optional
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 TYPE_MAP_PYTHON = {
     "string": "str",
@@ -149,10 +148,10 @@ def generate_routes(form_data: Dict) -> str:
     lines.append("from sqlalchemy.orm import Session")
     lines.append("from typing import List, Optional")
     lines.append("")
-    lines.append(f"from backend.schemas.auto_{name} import {class_name}Base, {class_name}Create")
-    lines.append("from backend.db.database import get_db")
-    lines.append("from backend.crud.utils import _get_generic, _upsert_generic, _apply_fields")
-    lines.append("from backend.logger import log_actualizar, log_eliminar, log_error")
+    lines.append(f"from app.generated.auto_{name} import {class_name}Base, {class_name}Create")
+    lines.append("from app.db.session import get_db")
+    lines.append("from app.db.base import get_generic, upsert_generic, apply_fields")
+    lines.append("from app.core.logging import log_actualizar, log_eliminar, log_error")
     lines.append("")
     lines.append(f'router = APIRouter(prefix="{prefix}", tags={tags}, redirect_slashes=False)')
     lines.append("")
@@ -168,7 +167,7 @@ def generate_routes(form_data: Dict) -> str:
     lines.append(f"    {pk}_prefix: Optional[str] = Query(None, description=\"Filtrar por {pk}\"),")
     lines.append("    db: Session = Depends(get_db),")
     lines.append("):")
-    lines.append(f"    from backend.models import {class_name}")
+    lines.append(f"    from app.forms.models import {class_name}")
     lines.append(f"    query = db.query({class_name}).filter({class_name}.activo == True)")
     lines.append(f"    if {pk}_prefix:")
     lines.append(f"        query = query.filter({class_name}.{pk}.startswith({pk}_prefix)).limit(10)")
@@ -183,7 +182,7 @@ def generate_routes(form_data: Dict) -> str:
     lines.append(f'    summary="Obtener registro por {pk.upper()}",')
     lines.append(")")
     lines.append(f"def obtener_{name}({pk}: str, db: Session = Depends(get_db)):")
-    lines.append(f"    from backend.models import {class_name}")
+    lines.append(f"    from app.forms.models import {class_name}")
     lines.append(f"    item = db.query({class_name}).filter({class_name}.{pk} == {pk}).first()")
     lines.append("    if not item:")
     lines.append(f'        raise HTTPException(status_code=404, detail="Registro no encontrado")')
@@ -198,9 +197,9 @@ def generate_routes(form_data: Dict) -> str:
     lines.append(f'    summary="Crear o actualizar registro",')
     lines.append(")")
     lines.append(f"def upsert_{name}(data: {class_name}Create, db: Session = Depends(get_db)):")
-    lines.append(f"    from backend.models import {class_name}")
+    lines.append(f"    from app.forms.models import {class_name}")
     lines.append("    try:")
-    lines.append(f"        item, is_new = _upsert_generic(db, {class_name}, data.model_dump(), \"{pk}\")")
+    lines.append(f"        item, is_new = upsert_generic(db, {class_name}, data.model_dump(), \"{pk}\")")
     lines.append("        db.commit()")
     lines.append("        db.refresh(item)")
     lines.append(f'        log_actualizar(modulo="{name}", dni=item.{pk}, nombre=getattr(item, "nombres", ""), campos={{}})')
@@ -218,7 +217,7 @@ def generate_routes(form_data: Dict) -> str:
     lines.append(f'    summary="Actualizar registro",')
     lines.append(")")
     lines.append(f"def actualizar_{name}({pk}: str, data: {class_name}Create, db: Session = Depends(get_db)):")
-    lines.append(f"    from backend.models import {class_name}")
+    lines.append(f"    from app.forms.models import {class_name}")
     lines.append("    try:")
     lines.append(f"        item = db.query({class_name}).filter({class_name}.{pk} == {pk}).first()")
     lines.append("        if not item:")
@@ -244,7 +243,7 @@ def generate_routes(form_data: Dict) -> str:
     lines.append(f'    summary="Dar de baja registro",')
     lines.append(")")
     lines.append(f"def baja_{name}({pk}: str, db: Session = Depends(get_db)):")
-    lines.append(f"    from backend.models import {class_name}")
+    lines.append(f"    from app.forms.models import {class_name}")
     lines.append("    try:")
     lines.append(f"        item = db.query({class_name}).filter({class_name}.{pk} == {pk}).first()")
     lines.append("        if not item:")
@@ -431,8 +430,8 @@ def generate_crud_utils() -> str:
 def generate_from_json():
     """Genera todo el código desde form-definitions.json."""
     definitions = load_definitions()
-    schemas_dir = ROOT / "backend" / "schemas"
-    routes_dir = ROOT / "backend" / "routes"
+    schemas_dir = ROOT / "backend" / "app" / "generated"
+    routes_dir = ROOT / "backend" / "app" / "generated"
     frontend_js = ROOT / "frontend" / "js"
 
     schemas_dir.mkdir(parents=True, exist_ok=True)
@@ -459,12 +458,6 @@ def generate_from_json():
     schema_js_path.write_text(js_content, encoding="utf-8")
     files.append(str(schema_js_path))
 
-    crud_utils_path = ROOT / "backend" / "crud" / "utils.py"
-    if not crud_utils_path.exists():
-        crud_content = generate_crud_utils()
-        crud_utils_path.write_text(crud_content, encoding="utf-8")
-        files.append(str(crud_utils_path))
-
     return files
 
 
@@ -477,7 +470,7 @@ def generate_from_form_definition(form_def, db_session=None) -> Dict:
     Genera todo el código desde una definición de formulario (ORM).
     Primero aplica migraciones, luego genera los archivos.
     """
-    from backend.crud.forms import apply_form_migrations
+    from app.forms.repository import apply_form_migrations
 
     form_data = extract_form_data(form_def)
     name = form_data["name"]
@@ -490,14 +483,15 @@ def generate_from_form_definition(form_def, db_session=None) -> Dict:
         db_session.commit()
 
     # Generar schema Pydantic
-    schemas_dir = ROOT / "backend" / "schemas"
+    schemas_dir = ROOT / "backend" / "app" / "generated"
+    schemas_dir.mkdir(parents=True, exist_ok=True)
     schema_path = schemas_dir / f"auto_{name}.py"
     schema_content = generate_pydantic_schema(form_data)
     schema_path.write_text(schema_content, encoding="utf-8")
     files_generated.append(str(schema_path))
 
     # Generar rutas
-    routes_dir = ROOT / "backend" / "routes"
+    routes_dir = ROOT / "backend" / "app" / "generated"
     routes_path = routes_dir / f"auto_{name}.py"
     routes_content = generate_routes(form_data)
     routes_path.write_text(routes_content, encoding="utf-8")

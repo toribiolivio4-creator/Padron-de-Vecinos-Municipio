@@ -1,37 +1,31 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 from datetime import datetime
 from typing import Any, Dict
-from bson import ObjectId
 
-from backend.db.mongo_db import get_collection, ping
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/submissions", tags=["form-submissions"])
+from backend.app.forms.repository import get_form
+from backend.app.db.base import get_collection, mongo_ping
 
 
-@router.post("/{form_name}", status_code=201)
-def submit_form(form_name: str, data: Dict[str, Any]):
-    if not ping():
+def submit_form_data(form_name: str, data: Dict[str, Any]) -> dict:
+    if not mongo_ping():
         raise HTTPException(status_code=503, detail="MongoDB no disponible")
 
     col = get_collection(form_name)
-    doc = {
-        **data,
-        "_submitted_at": datetime.utcnow().isoformat(),
-    }
+    doc = {**data, "_submitted_at": datetime.utcnow().isoformat()}
     result = col.insert_one(doc)
     return {"id": str(result.inserted_id), "message": "Formulario guardado correctamente"}
 
 
-@router.get("/{collection_name}")
 def list_submissions(collection_name: str, limit: int = 50, skip: int = 0):
-    if not ping():
+    if not mongo_ping():
         raise HTTPException(status_code=503, detail="MongoDB no disponible")
 
+    from bson import ObjectId
+
     col = get_collection(collection_name)
-    cursor = col.find(
-        {"_activo": {"$ne": False}}
-    ).sort("_id", -1).skip(skip).limit(limit)
+    cursor = col.find({"_activo": {"$ne": False}}).sort("_id", -1).skip(skip).limit(limit)
 
     result = []
     for doc in cursor:
@@ -40,9 +34,8 @@ def list_submissions(collection_name: str, limit: int = 50, skip: int = 0):
     return result
 
 
-@router.get("/{collection_name}/{record_id}")
 def get_submission(collection_name: str, record_id: int):
-    if not ping():
+    if not mongo_ping():
         raise HTTPException(status_code=503, detail="MongoDB no disponible")
 
     col = get_collection(collection_name)
@@ -52,29 +45,29 @@ def get_submission(collection_name: str, record_id: int):
     return doc
 
 
-@router.get("/{collection_name}/count")
 def count_submissions(collection_name: str):
-    if not ping():
+    if not mongo_ping():
         raise HTTPException(status_code=503, detail="MongoDB no disponible")
 
     col = get_collection(collection_name)
     return {"collection": collection_name, "count": col.count_documents({})}
 
 
-@router.put("/{collection_name}/{record_id}/baja")
 def soft_delete_submission(collection_name: str, record_id: str):
-    if not ping():
+    if not mongo_ping():
         raise HTTPException(status_code=503, detail="MongoDB no disponible")
+
+    from bson import ObjectId
 
     try:
         obj_id = ObjectId(record_id)
     except:
-        raise HTTPException(status_code=400, detail="ID inválido")
+        raise HTTPException(status_code=400, detail="ID invalido")
 
     col = get_collection(collection_name)
     result = col.update_one(
         {"_id": obj_id},
-        {"$set": {"_activo": False, "_deactivated_at": datetime.utcnow().isoformat()}}
+        {"$set": {"_activo": False, "_deactivated_at": datetime.utcnow().isoformat()}},
     )
 
     if result.matched_count == 0:
